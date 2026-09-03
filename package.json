@@ -1,0 +1,29 @@
+{
+  "name": "dswb_2a_freshroute_2c26_grupo_the_engine",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cmarceloh/DSWB_2A_FreshRoute_2C26_Grupo_The_Engine.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/cmarceloh/DSWB_2A_FreshRoute_2C26_Grupo_The_Engine/issues"
+  },
+  "homepage": "https://github.com/cmarceloh/DSWB_2A_FreshRoute_2C26_Grupo_The_Engine#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "pug": "^3.0.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
