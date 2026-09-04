@@ -2,26 +2,5 @@
   "clientes": [],
   "productos": [],
   "repartidores": [],
-  "pedidos": [
-    {
-      "id": 1788382478663,
-      "idCliente": 1,
-      "idProductos": [
-        101,
-        102
-      ],
-      "idRepartidor": 5,
-      "estado": "Entregado"
-    },
-    {
-      "id": 1788479409899,
-      "idCliente": 1,
-      "idProductos": [
-        101,
-        102
-      ],
-      "idRepartidor": 5,
-      "estado": "Entregado"
-    }
-  ]
+  "pedidos": []
 }
