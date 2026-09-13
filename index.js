@@ -5,6 +5,7 @@ const port = 3000;
 // Importar rutas
 const pedidosRoutes = require("./routes/pedidos");
 const clientesRoutes = require("./routes/clientes");
+const productosRoutes = require("./routes/productos");
 
 // Middlewares
 app.use(express.json()); // Permite procesar el req.body en JSON
@@ -25,6 +26,7 @@ app.get("/", (req, res) => {
 // Conectar Rutas (Rutas dinámicas)
 app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/clientes", clientesRoutes);
+app.use("/api/productos", productosRoutes);
 
 // Iniciar servidor
 app.listen(port, () => {
