@@ -1,21 +1,28 @@
-# DSWB_2A_FreshRoute_2C26_Grupo_The_Engine
+# 🚚 DSWB_2A_FreshRoute_2C26_Grupo_The_Engine
 
-API REST para la gestión de pedidos de FreshRoute, un sistema de distribución. Permite administrar clientes, productos y pedidos.
+> API REST para la gestión de pedidos de FreshRoute, un sistema de distribución. Permite administrar clientes, productos y pedidos.
 
-## Stack
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)
+![Jest](https://img.shields.io/badge/Jest-C21325?style=flat-square&logo=jest&logoColor=white)
+![Pug](https://img.shields.io/badge/Pug-A86454?style=flat-square&logo=pug&logoColor=white)
+
+---
+
+## 🛠 Stack
 
 - Node.js + Express
 - Pug (vista de bienvenida en `/`)
 - Persistencia en archivo JSON (`data/database.json`), sin base de datos externa
 - Jest + Supertest para los tests
 
-## Instalación
+## 📦 Instalación
 
 ```bash
 npm install
 ```
 
-## Uso
+## 🚀 Uso
 
 ```bash
 npm run dev     # levanta el servidor con nodemon (recarga automática)
@@ -24,7 +31,7 @@ node index.js   # levanta el servidor sin recarga automática
 
 Por defecto el servidor corre en `http://localhost:3000`.
 
-## Tests
+## 🧪 Tests
 
 ```bash
 npm test
@@ -32,7 +39,7 @@ npm test
 
 Corre los tests de los tres módulos (clientes, productos, pedidos) contra la API real, sin necesidad de levantar el servidor a mano.
 
-## Estructura del proyecto
+## 📁 Estructura del proyecto
 
 ```
 controllers/   # lógica de cada endpoint
@@ -44,9 +51,9 @@ tests/         # tests con Jest + Supertest
 
 ---
 
-## Endpoints
+## 📡 Endpoints
 
-### Clientes — `/api/clientes`
+### 👤 Clientes — `/api/clientes`
 
 | Método | Ruta               | Descripción                                  |
 |--------|---------------------|-----------------------------------------------|
@@ -66,7 +73,7 @@ tests/         # tests con Jest + Supertest
 }
 ```
 
-### Productos — `/api/productos`
+### 🍎 Productos — `/api/productos`
 
 | Método | Ruta                    | Descripción                                  |
 |--------|--------------------------|------------------------------------------------|
@@ -96,7 +103,7 @@ tests/         # tests con Jest + Supertest
 }
 ```
 
-### Pedidos — `/api/pedidos`
+### 📋 Pedidos — `/api/pedidos`
 
 | Método | Ruta                     | Descripción                                  |
 |--------|---------------------------|------------------------------------------------|
@@ -127,7 +134,7 @@ Estados válidos: `Pendiente` → `Preparado` → `En camino` → `Entregado`, o
 
 ---
 
-## Esquemas de datos
+## 🗃 Esquemas de datos
 
 ### Cliente
 
@@ -158,6 +165,18 @@ Estados válidos: `Pendiente` → `Preparado` → `En camino` → `Entregado`, o
 | `idRepartidor` | number \| null   | Opcional |
 | `estado`       | string           | `Pendiente` por defecto |
 
-## Respuestas de error
+## ⚠️ Respuestas de error
 
 Todas las validaciones y reglas de negocio devuelven un JSON con la forma `{ "error": "mensaje" }` junto con el código HTTP correspondiente (`400` datos inválidos, `404` recurso no encontrado, `409` conflicto por una regla de negocio, ej. borrar un cliente con pedidos activos).
+
+---
+
+## 👥 Equipo — The Engine
+
+| Integrante |
+|---|
+| Carlos Marcelo Hernández |
+| Valeria Noemi Fernandez |
+| Micaela Laila Gargiulo |
+| Dámaris Rodriguez |
+| Javier Nehuen López |
