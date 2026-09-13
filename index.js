@@ -5,6 +5,7 @@ const port = 3000;
 // Importar rutas
 const pedidosRoutes = require("./routes/pedidos");
 const clientesRoutes = require("./routes/clientes");
+const productosRoutes = require("./routes/productos");
 
 // Middlewares
 app.use(express.json()); // Permite procesar el req.body en JSON
@@ -25,8 +26,15 @@ app.get("/", (req, res) => {
 // Conectar Rutas (Rutas dinámicas)
 app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/clientes", clientesRoutes);
+app.use("/api/productos", productosRoutes);
 
-// Iniciar servidor
-app.listen(port, () => {
-  console.log(`Servidor de FreshRoute escuchando en http://localhost:${port}`);
-});
+// Iniciar servidor (solo si el archivo se ejecuta directamente, no al importarlo en tests)
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(
+      `Servidor de FreshRoute escuchando en http://localhost:${port}`,
+    );
+  });
+}
+
+module.exports = app;
