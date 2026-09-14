@@ -1,3 +1,5 @@
+const ErrorDeValidacion = require("./ErrorDeValidacion");
+
 class Pedido {
   constructor(idCliente, idProductos, idRepartidor) {
     this.id = Date.now(); // Genera un ID único básico
@@ -18,13 +20,17 @@ class Pedido {
     ];
 
     if (!estadosValidos.includes(nuevoEstado)) {
-      throw new Error("Estado no válido");
+      throw new ErrorDeValidacion("Estado no válido");
     }
     if (this.estado === "Entregado" && nuevoEstado === "Pendiente") {
-      throw new Error("Un pedido entregado no puede volver a pendiente");
+      throw new ErrorDeValidacion(
+        "Un pedido entregado no puede volver a pendiente",
+      );
     }
     if (this.estado === "Cancelado" && nuevoEstado === "En camino") {
-      throw new Error("Un pedido cancelado no puede ser enviado");
+      throw new ErrorDeValidacion(
+        "Un pedido cancelado no puede ser enviado",
+      );
     }
 
     this.estado = nuevoEstado;

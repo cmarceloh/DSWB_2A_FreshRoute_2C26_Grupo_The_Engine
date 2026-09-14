@@ -28,6 +28,13 @@ app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/clientes", clientesRoutes);
 app.use("/api/productos", productosRoutes);
 
+// Manejador de errores inesperados (fallas de lectura/escritura de la base,
+// bugs no previstos, etc.) — siempre debe ir después de las rutas
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: "Error interno del servidor" });
+});
+
 // Iniciar servidor (solo si el archivo se ejecuta directamente, no al importarlo en tests)
 if (require.main === module) {
   app.listen(port, () => {

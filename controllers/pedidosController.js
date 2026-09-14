@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const Pedido = require("../models/Pedido");
+const ErrorDeValidacion = require("../models/ErrorDeValidacion");
 
 // Ruta absoluta al archivo JSON
 const dbPath = path.join(__dirname, "../data/database.json");
@@ -132,7 +133,11 @@ const cambiarEstado = (req, res) => {
     });
   } catch (error) {
     // Si el estado es inválido o la transición no está permitida
-    res.status(400).json({ error: error.message });
+    if (error instanceof ErrorDeValidacion) {
+      return res.status(400).json({ error: error.message });
+    }
+    // Cualquier otro error es inesperado (lo toma el manejador global)
+    throw error;
   }
 };
 

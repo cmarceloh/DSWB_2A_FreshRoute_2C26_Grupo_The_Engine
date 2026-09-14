@@ -1,3 +1,5 @@
+const ErrorDeValidacion = require("./ErrorDeValidacion");
+
 class Producto {
   constructor(nombre, precio, stock, categoria) {
     this.id = Date.now();
@@ -22,7 +24,9 @@ class Producto {
     const nuevoStock = this.stock + cantidad;
 
     if (nuevoStock < 0) {
-      throw new Error("No hay stock suficiente para realizar el ajuste");
+      throw new ErrorDeValidacion(
+        "No hay stock suficiente para realizar el ajuste",
+      );
     }
 
     this.stock = nuevoStock;

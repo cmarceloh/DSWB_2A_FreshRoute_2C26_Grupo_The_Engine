@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const Producto = require("../models/Producto");
+const ErrorDeValidacion = require("../models/ErrorDeValidacion");
 
 // Ruta absoluta al archivo JSON
 const dbPath = path.join(__dirname, "../data/database.json");
@@ -193,7 +194,11 @@ const ajustarStock = (req, res) => {
     });
   } catch (error) {
     // Si la cantidad deja el stock en negativo
-    res.status(400).json({ error: error.message });
+    if (error instanceof ErrorDeValidacion) {
+      return res.status(400).json({ error: error.message });
+    }
+    // Cualquier otro error es inesperado (lo toma el manejador global)
+    throw error;
   }
 };
 
