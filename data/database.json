@@ -2,5 +2,22 @@
   "clientes": [],
   "productos": [],
   "repartidores": [],
-  "pedidos": []
+  "pedidos": [
+    {
+      "id": 1791572842411,
+      "idCliente": 1791572842392,
+      "idProductos": [
+        1791572842405
+      ],
+      "estado": "Entregado"
+    },
+    {
+      "id": 1791572852459,
+      "idCliente": 1791572852442,
+      "idProductos": [
+        1791572852451
+      ],
+      "estado": "Entregado"
+    }
+  ]
 }

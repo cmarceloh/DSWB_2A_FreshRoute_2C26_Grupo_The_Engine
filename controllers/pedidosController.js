@@ -1,144 +1,128 @@
-const fs = require("fs");
-const path = require("path");
 const Pedido = require("../models/Pedido");
+const Cliente = require("../models/Cliente");
+const Producto = require("../models/Producto");
 
-// Ruta absoluta al archivo JSON
-const dbPath = path.join(__dirname, "../data/database.json");
-
-// Función auxiliar para leer la base de datos
-const leerDB = () => {
-  const data = fs.readFileSync(dbPath, "utf-8");
-  return JSON.parse(data);
-};
-
-// Función auxiliar para escribir en la base de datos
-const escribirDB = (data) => {
-  fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), "utf-8");
-};
-
-// Controlador para obtener todos los pedidos (con filtros opcionales por query params)
-const obtenerPedidos = (req, res) => {
-  const db = leerDB();
-  const { estado, idCliente } = req.query;
-  let resultado = db.pedidos;
-
-  // Consulta: filtrar pedidos por estado
-  if (estado) {
-    resultado = resultado.filter(
-      (p) => p.estado.toLowerCase() === estado.toLowerCase(),
-    );
-  }
-
-  // Consulta: filtrar pedidos por cliente
-  if (idCliente) {
-    resultado = resultado.filter((p) => p.idCliente === parseInt(idCliente));
-  }
-
-  res.json(resultado);
-};
-
-// Controlador para obtener un pedido por ID
-const obtenerPedidoPorId = (req, res) => {
-  const id = parseInt(req.params.id);
-  const db = leerDB();
-
-  const pedido = db.pedidos.find((p) => p.id === id);
-  if (!pedido) {
-    return res.status(404).json({ error: "Pedido no encontrado" });
-  }
-
-  res.json(pedido);
-};
-
-// Controlador para crear un pedido
-const crearPedido = (req, res) => {
-  const { idCliente, idProductos, idRepartidor } = req.body;
-
-  // Validación: campos obligatorios
-  if (!idCliente || !idProductos) {
-    return res
-      .status(400)
-      .json({ error: "El pedido debe incluir idCliente e idProductos" });
-  }
-
-  // Validación: tipos de datos
-  if (typeof idCliente !== "number") {
-    return res.status(400).json({ error: "idCliente debe ser un número" });
-  }
-  if (!Array.isArray(idProductos) || idProductos.length === 0) {
-    return res
-      .status(400)
-      .json({ error: "El pedido debe contener al menos un producto" });
-  }
-
-  const db = leerDB();
-
-  // Validación: existencia de registro relacionado (el cliente debe existir)
-  const clienteExiste = db.clientes.some((c) => c.id === idCliente);
-  if (!clienteExiste) {
-    return res
-      .status(404)
-      .json({ error: "El cliente indicado no existe" });
-  }
-
-  const nuevoPedido = new Pedido(idCliente, idProductos, idRepartidor);
-
-  db.pedidos.push(nuevoPedido);
-  escribirDB(db);
-
-  res
-    .status(201)
-    .json({ mensaje: "Pedido creado con éxito", pedido: nuevoPedido });
-};
-
-// Controlador para cambiar el estado de un pedido
-const cambiarEstado = (req, res) => {
-  const id = parseInt(req.params.id); // Captura el ID de la ruta
-  const { nuevoEstado } = req.body; // Captura el estado enviado en formato JSON
-  const db = leerDB();
-
-  // Validación: campo obligatorio
-  if (!nuevoEstado) {
-    return res.status(400).json({ error: "Debe indicar el nuevo estado" });
-  }
-
-  // Buscar la posición del pedido en el array
-  const pedidoIndex = db.pedidos.findIndex((p) => p.id === id);
-  if (pedidoIndex === -1) {
-    return res.status(404).json({ error: "Pedido no encontrado" });
-  }
-
-  // Instanciar la clase Pedido con los datos guardados
-  const datosGuardados = db.pedidos[pedidoIndex];
-  const pedidoActivo = new Pedido(
-    datosGuardados.idCliente,
-    datosGuardados.idProductos,
-    datosGuardados.idRepartidor,
-  );
-  pedidoActivo.id = datosGuardados.id;
-  pedidoActivo.estado = datosGuardados.estado;
-
-  // Ejecutar el método de la clase para validar transiciones
+// Obtener todos los pedidos con posibilidad de filtrar por estado e idCliente
+exports.obtenerPedidos = async (req, res) => {
   try {
-    pedidoActivo.actualizarEstado(nuevoEstado);
+    const { estado, idCliente } = req.query;
+    const filtro = {};
 
-    // Si la validación es correcta, actualizar el array y sobrescribir el JSON
-    db.pedidos[pedidoIndex] = pedidoActivo;
-    escribirDB(db);
+    // Filtro por estado del pedido
+    if (estado) {
+      filtro.estado = { $regex: `^${estado}$`, $options: "i" };
+    }
 
-    res.json({
-      mensaje: "Estado actualizado exitosamente",
-      pedido: pedidoActivo,
-    });
+    // Filtro por ID de cliente relacional
+    if (idCliente) {
+      filtro.idCliente = idCliente;
+    }
+
+    // Poblar las relaciones con los modelos de Cliente, Productos y Repartidor
+    const pedidos = await Pedido.find(filtro)
+      .populate("idCliente", "nombre direccion telefono")
+      .populate("idProductos", "nombre precio categoria")
+      .populate("idRepartidor", "nombre telefono disponible");
+
+    res.status(200).json(pedidos);
   } catch (error) {
-    // Si el estado es inválido o la transición no está permitida
+    res
+      .status(500)
+      .json({
+        error: "Error al obtener la lista de pedidos",
+        detalle: error.message,
+      });
+  }
+};
+
+// Obtener un pedido especifico por su ID de MongoDB
+exports.obtenerPedidoPorId = async (req, res) => {
+  try {
+    const pedido = await Pedido.findById(req.params.id)
+      .populate("idCliente", "nombre direccion telefono")
+      .populate("idProductos", "nombre precio categoria")
+      .populate("idRepartidor", "nombre telefono disponible");
+
+    if (!pedido) {
+      return res.status(404).json({ error: "Pedido no encontrado" });
+    }
+
+    res.status(200).json(pedido);
+  } catch (error) {
+    res
+      .status(400)
+      .json({ error: "ID de pedido no valido", detalle: error.message });
+  }
+};
+
+// Crear un nuevo pedido validando que el cliente exista en la base de datos
+exports.crearPedido = async (req, res) => {
+  try {
+    const { idCliente, idProductos, idRepartidor } = req.body;
+
+    // Validacion de campos obligatorios
+    if (!idCliente || !idProductos) {
+      return res
+        .status(400)
+        .json({ error: "El pedido debe incluir idCliente e idProductos" });
+    }
+
+    if (!Array.isArray(idProductos) || idProductos.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "El pedido debe contener al menos un producto" });
+    }
+
+    // Verificacion de existencia del cliente relacionado
+    const clienteExiste = await Cliente.findById(idCliente);
+    if (!clienteExiste) {
+      return res
+        .status(404)
+        .json({ error: "El cliente indicado no existe en la base de datos" });
+    }
+
+    const nuevoPedido = new Pedido({
+      idCliente,
+      idProductos,
+      idRepartidor: idRepartidor || null,
+    });
+
+    await nuevoPedido.save();
+
+    res
+      .status(201)
+      .json({ mensaje: "Pedido creado con exito", pedido: nuevoPedido });
+  } catch (error) {
+    res
+      .status(400)
+      .json({ error: "Error al crear el pedido", detalle: error.message });
+  }
+};
+
+// Cambiar el estado de un pedido aplicando las reglas de negocio
+exports.cambiarEstado = async (req, res) => {
+  try {
+    const { nuevoEstado } = req.body;
+
+    if (!nuevoEstado) {
+      return res
+        .status(400)
+        .json({ error: "Debe indicar el nuevo estado del pedido" });
+    }
+
+    const pedido = await Pedido.findById(req.params.id);
+    if (!pedido) {
+      return res.status(404).json({ error: "Pedido no encontrado" });
+    }
+
+    // Se ejecuta el metodo personalizado del modelo para validar las transiciones de estado
+    pedido.actualizarEstado(nuevoEstado);
+    await pedido.save();
+
+    res
+      .status(200)
+      .json({ mensaje: "Estado actualizado exitosamente", pedido });
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
-};
-
-module.exports = {
-  obtenerPedidos,
-  obtenerPedidoPorId,
-  crearPedido,
-  cambiarEstado,
 };

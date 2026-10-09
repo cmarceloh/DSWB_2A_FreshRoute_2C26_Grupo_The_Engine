@@ -12,8 +12,8 @@
 ## 🛠 Stack
 
 - Node.js + Express
-- Pug (vista de bienvenida en `/`)
-- Persistencia en archivo JSON (`data/database.json`), sin base de datos externa
+- Pug (panel visual en `/` para registrar y consultar clientes, productos y pedidos)
+- MongoDB con Mongoose para la persistencia de datos
 - Jest + Supertest para los tests
 
 ## 📦 Instalación

@@ -1,8 +1,285 @@
+//- Documento principal del panel de administración FreshRoute.
 doctype html
-html
+html(lang="es")
   head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
     title= titulo
+
+    //- Estilos internos para una presentación clara y adaptable a pantallas pequeñas.
+    style.
+      :root {
+        color-scheme: light;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        color: #1d2a25;
+        background: #f3f6f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+      }
+
+      header {
+        padding: 28px max(24px, calc((100% - 1180px) / 2));
+        color: #fff;
+        background: #174c3b;
+      }
+
+      header h1 {
+        margin: 0 0 6px;
+        font-size: clamp(1.7rem, 4vw, 2.25rem);
+      }
+
+      header p {
+        margin: 0;
+        color: #d4e6dd;
+      }
+
+      main {
+        width: min(1180px, calc(100% - 32px));
+        margin: 28px auto 56px;
+      }
+
+      .section-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+
+      .section-nav a {
+        padding: 9px 13px;
+        border: 1px solid #cbd8d1;
+        border-radius: 7px;
+        color: #174c3b;
+        background: #fff;
+        text-decoration: none;
+      }
+
+      .section-nav a:hover {
+        background: #e8f1ec;
+      }
+
+      .alert {
+        padding: 12px 15px;
+        border: 1px solid #e7b3ad;
+        border-radius: 7px;
+        color: #7e261e;
+        background: #fff1ef;
+      }
+
+      .panel {
+        margin: 18px 0;
+        padding: 22px;
+        border: 1px solid #dce5df;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 3px 12px rgb(30 60 45 / 5%);
+      }
+
+      .panel h2 {
+        margin: 0 0 16px;
+        color: #174c3b;
+        font-size: 1.3rem;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 14px;
+        align-items: end;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: #384b42;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #bdcbc2;
+        border-radius: 6px;
+        font: inherit;
+      }
+
+      input:focus {
+        border-color: #287457;
+        outline: 3px solid rgb(40 116 87 / 15%);
+      }
+
+      button {
+        min-height: 42px;
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 6px;
+        color: #fff;
+        background: #24704f;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #19583d;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+
+      th,
+      td {
+        padding: 11px 12px;
+        border-bottom: 1px solid #e5ebe7;
+        vertical-align: top;
+      }
+
+      th {
+        color: #385347;
+        background: #f4f8f5;
+        font-size: 0.88rem;
+      }
+
+      .empty-state {
+        color: #65756c;
+      }
+
+      @media (max-width: 600px) {
+        .panel {
+          padding: 17px;
+        }
+      }
+
   body
-    h1= titulo
-    p= mensaje
-    p Esta API gestiona los pedidos, clientes, productos y repartidores.
+    //- Encabezado que identifica el panel de gestión.
+    header
+      h1= titulo
+      p Panel de gestión de clientes, productos y pedidos
+
+    //- Navegación interna para acceder rápidamente a cada sección.
+    main
+      nav.section-nav(aria-label="Secciones del panel")
+        a(href="#formularios") Carga de datos
+        a(href="#clientes") Clientes
+        a(href="#productos") Productos
+        a(href="#pedidos") Pedidos
+
+      //- Mensaje de validación o error recibido tras un envío de formulario.
+      if error
+        p.alert(role="alert")= error
+
+      //- Formularios HTML para crear clientes y productos.
+      section#formularios.panel
+        h2 Cargar información
+        .form-grid
+          form(action="/agregar-cliente" method="POST")
+            h3 Nuevo cliente
+            label(for="cliente-nombre") Nombre
+            input#cliente-nombre(type="text" name="nombre" required maxlength="120")
+            label(for="cliente-telefono") Teléfono
+            input#cliente-telefono(type="tel" name="telefono" required maxlength="40")
+            label(for="cliente-direccion") Dirección
+            input#cliente-direccion(type="text" name="direccion" required maxlength="200")
+            button(type="submit") Guardar cliente
+
+          form(action="/agregar-producto" method="POST")
+            h3 Nuevo producto
+            label(for="producto-nombre") Nombre
+            input#producto-nombre(type="text" name="nombre" required maxlength="120")
+            label(for="producto-precio") Precio
+            input#producto-precio(type="number" name="precio" min="0.01" step="0.01" required)
+            label(for="producto-stock") Stock
+            input#producto-stock(type="number" name="stock" min="0" step="1" required)
+            label(for="producto-categoria") Categoría
+            input#producto-categoria(type="text" name="categoria" maxlength="80")
+            button(type="submit") Guardar producto
+
+      //- Tabla de clientes consultados desde MongoDB.
+      section#clientes.panel
+        h2 Clientes
+        .table-wrap
+          table
+            thead
+              tr
+                th(scope="col") Nombre
+                th(scope="col") Teléfono
+                th(scope="col") Dirección
+            tbody
+              if clientes.length
+                each cliente in clientes
+                  tr
+                    td= cliente.nombre
+                    td= cliente.telefono || "Sin teléfono"
+                    td= cliente.direccion
+              else
+                tr
+                  td.empty-state(colspan="3") Todavía no hay clientes registrados.
+
+      //- Tabla de productos consultados desde MongoDB.
+      section#productos.panel
+        h2 Productos
+        .table-wrap
+          table
+            thead
+              tr
+                th(scope="col") Nombre
+                th(scope="col") Categoría
+                th(scope="col") Precio
+                th(scope="col") Stock
+            tbody
+              if productos.length
+                each producto in productos
+                  tr
+                    td= producto.nombre
+                    td= producto.categoria || "Sin categoría"
+                    td= producto.precio.toFixed(2)
+                    td= producto.stock
+              else
+                tr
+                  td.empty-state(colspan="4") Todavía no hay productos registrados.
+
+      //- Tabla de pedidos con referencias pobladas a clientes y productos.
+      section#pedidos.panel
+        h2 Pedidos
+        .table-wrap
+          table
+            thead
+              tr
+                th(scope="col") Cliente
+                th(scope="col") Productos
+                th(scope="col") Estado
+                th(scope="col") Creado
+            tbody
+              if pedidos.length
+                each pedido in pedidos
+                  tr
+                    td= pedido.idCliente ? pedido.idCliente.nombre : "Cliente no disponible"
+                    td
+                      if pedido.idProductos && pedido.idProductos.length
+                        each producto, indice in pedido.idProductos
+                          if indice
+                            | ,
+                          | #{producto ? producto.nombre : "Producto no disponible"}
+                      else
+                        | Sin productos
+                    td= pedido.estado
+                    td= pedido.createdAt ? pedido.createdAt.toLocaleString("es") : "Sin fecha"
+              else
+                tr
+                  td.empty-state(colspan="4") Todavía no hay pedidos registrados.
