@@ -8,6 +8,7 @@ const conectarDB = require("./config/db");
 const Cliente = require("./models/Cliente");
 const Producto = require("./models/Producto");
 const Pedido = require("./models/Pedido");
+const Repartidor = require("./models/Repartidor");
 
 // Define la aplicación HTTP y la interfaz/puerto de escucha del servidor.
 const app = express();
@@ -28,12 +29,14 @@ app.set("view engine", "pug");
 // 4. Controlador de la página principal: consulta las colecciones para el panel.
 app.get("/", async (req, res) => {
   try {
-    const [clientes, productos, pedidos] = await Promise.all([
+    const [clientes, productos, pedidos, repartidores] = await Promise.all([
       Cliente.find().sort({ nombre: 1 }),
       Producto.find().sort({ nombre: 1 }),
+      Repartidor.find().sort({ nombre: 1 }),
       Pedido.find()
         .populate("idCliente", "nombre")
         .populate("idProductos", "nombre")
+        .populate("idRepartidor", "nombre")
         .sort({ createdAt: -1 }),
     ]);
 
@@ -42,6 +45,7 @@ app.get("/", async (req, res) => {
       clientes,
       productos,
       pedidos,
+      repartidores,
       error: req.query.error || null,
     });
   } catch (error) {
@@ -111,14 +115,148 @@ app.post("/agregar-producto", async (req, res) => {
   }
 });
 
+// Controlador del formulario: valida y guarda un repartidor en MongoDB.
+app.post("/agregar-repartidor", async (req, res) => {
+  const { nombre, telefono, vehiculo } = req.body;
+
+  if (!nombre?.trim() || !telefono?.trim() || !vehiculo?.trim()) {
+    return res.redirect(
+      `/?error=${encodeURIComponent("Completa todos los campos del repartidor.")}`,
+    );
+  }
+
+  try {
+    await Repartidor.create({
+      nombre: nombre.trim(),
+      telefono: telefono.trim(),
+      vehiculo: vehiculo.trim(),
+    });
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error al guardar el repartidor:", error.message);
+    res.redirect(
+      `/?error=${encodeURIComponent("No se pudo guardar el repartidor.")}`,
+    );
+  }
+});
+
+// Controlador del formulario: valida los datos del pedido y confirma sus relaciones.
+app.post("/agregar-pedido", async (req, res) => {
+  const {
+    idCliente,
+    idProductos,
+    idRepartidor,
+    montoTotal,
+    direccionEntrega,
+  } = req.body;
+  const montoNumerico = Number(montoTotal);
+
+  if (
+    !idCliente ||
+    !idProductos ||
+    !direccionEntrega?.trim() ||
+    montoTotal === "" ||
+    !Number.isFinite(montoNumerico) ||
+    montoNumerico <= 0
+  ) {
+    return res.redirect(
+      `/?error=${encodeURIComponent("Completa todos los campos del pedido con valores válidos.")}`,
+    );
+  }
+
+  try {
+    const [cliente, producto, repartidor] = await Promise.all([
+      Cliente.findById(idCliente),
+      Producto.findById(idProductos),
+      idRepartidor ? Repartidor.findById(idRepartidor) : null,
+    ]);
+
+    if (!cliente || !producto || (idRepartidor && !repartidor)) {
+      return res.redirect(
+        `/?error=${encodeURIComponent("Selecciona un cliente y un producto registrados, y un repartidor válido si corresponde.")}`,
+      );
+    }
+
+    await Pedido.create({
+      idCliente,
+      idProductos: [idProductos],
+      idRepartidor: idRepartidor || null,
+      montoTotal: montoNumerico,
+      direccionEntrega: direccionEntrega.trim(),
+    });
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error al guardar el pedido:", error.message);
+    res.redirect(
+      `/?error=${encodeURIComponent("No se pudo guardar el pedido.")}`,
+    );
+  }
+});
+
+// Controlador del formulario: elimina un cliente y vuelve al panel.
+app.post("/eliminar-cliente/:id", async (req, res) => {
+  try {
+    const cliente = await Cliente.findByIdAndDelete(req.params.id);
+    if (!cliente) {
+      return res.redirect(
+        `/?error=${encodeURIComponent("No se encontró el cliente seleccionado.")}`,
+      );
+    }
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error al eliminar el cliente:", error.message);
+    res.redirect(
+      `/?error=${encodeURIComponent("No se pudo eliminar el cliente.")}`,
+    );
+  }
+});
+
+// Controlador del formulario: elimina un producto y vuelve al panel.
+app.post("/eliminar-producto/:id", async (req, res) => {
+  try {
+    const producto = await Producto.findByIdAndDelete(req.params.id);
+    if (!producto) {
+      return res.redirect(
+        `/?error=${encodeURIComponent("No se encontró el producto seleccionado.")}`,
+      );
+    }
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error al eliminar el producto:", error.message);
+    res.redirect(
+      `/?error=${encodeURIComponent("No se pudo eliminar el producto.")}`,
+    );
+  }
+});
+
+// Controlador del formulario: elimina un pedido y vuelve al panel.
+app.post("/eliminar-pedido/:id", async (req, res) => {
+  try {
+    const pedido = await Pedido.findByIdAndDelete(req.params.id);
+    if (!pedido) {
+      return res.redirect(
+        `/?error=${encodeURIComponent("No se encontró el pedido seleccionado.")}`,
+      );
+    }
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error al eliminar el pedido:", error.message);
+    res.redirect(
+      `/?error=${encodeURIComponent("No se pudo eliminar el pedido.")}`,
+    );
+  }
+});
+
 // 7. Importación y montaje de los enrutadores de la API.
 const pedidosRoutes = require("./routes/pedidos");
 const clientesRoutes = require("./routes/clientes");
 const productosRoutes = require("./routes/productos");
+const repartidoresRoutes = require("./routes/repartidores");
 
 app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/clientes", clientesRoutes);
 app.use("/api/productos", productosRoutes);
+app.use("/api/repartidores", repartidoresRoutes);
 
 // 8. Respuesta JSON para las rutas que no existen.
 app.use((req, res) => {

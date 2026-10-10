@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-// Definición del esquema para la colección Repartidores
+// Define los datos de contacto, vehículo y disponibilidad de cada repartidor.
 const repartidorSchema = new mongoose.Schema(
   {
     nombre: {
@@ -10,19 +10,25 @@ const repartidorSchema = new mongoose.Schema(
     },
     telefono: {
       type: String,
+      required: [true, "El teléfono del repartidor es obligatorio"],
+      trim: true,
+    },
+    vehiculo: {
+      type: String,
+      required: [true, "El vehículo del repartidor es obligatorio"],
       trim: true,
     },
     disponible: {
       type: Boolean,
-      default: true, // Estado por defecto para saber si puede tomar pedidos
+      default: true,
     },
   },
   {
-    timestamps: true, // Genera automáticamente los campos createdAt y updatedAt
+    timestamps: true,
   },
 );
 
-// Método de instancia para actualizar la disponibilidad del repartidor
+// Permite cambiar la disponibilidad desde las reglas de negocio del modelo.
 repartidorSchema.methods.cambiarDisponibilidad = function (estado) {
   this.disponible = estado;
 };

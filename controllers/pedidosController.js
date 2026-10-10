@@ -1,6 +1,8 @@
 const Pedido = require("../models/Pedido");
 const Cliente = require("../models/Cliente");
 const Producto = require("../models/Producto");
+// Registra el modelo referido para que populate esté disponible al usar la API de pedidos.
+require("../models/Repartidor");
 
 // Obtener todos los pedidos con posibilidad de filtrar por estado e idCliente
 exports.obtenerPedidos = async (req, res) => {

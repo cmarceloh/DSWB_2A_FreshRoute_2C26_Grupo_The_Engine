@@ -15,9 +15,19 @@ const pedidoSchema = new mongoose.Schema(
         required: [true, "El pedido debe contener al menos un producto"],
       },
     ],
+    // Datos adicionales capturados por los formularios del panel web.
+    montoTotal: {
+      type: Number,
+      min: [0, "El monto total no puede ser negativo"],
+    },
+    direccionEntrega: {
+      type: String,
+      trim: true,
+    },
     idRepartidor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Repartidor",
+      required: false,
       default: null,
     },
     estado: {

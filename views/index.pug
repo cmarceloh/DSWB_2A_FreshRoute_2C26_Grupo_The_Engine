@@ -112,9 +112,32 @@ html(lang="es")
         font: inherit;
       }
 
+      /* Mantiene los selectores visualmente consistentes con los campos de texto. */
+      select {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #bdcbc2;
+        border-radius: 6px;
+        background: #fff;
+        font: inherit;
+      }
+
       input:focus {
         border-color: #287457;
         outline: 3px solid rgb(40 116 87 / 15%);
+      }
+
+      /* Distingue las acciones de borrado sin cambiar el diseño de los formularios. */
+      .delete-button {
+        min-height: 36px;
+        padding: 7px 11px;
+        background: #9a3329;
+        font-size: 0.9rem;
+      }
+
+      .delete-button:hover {
+        background: #76251e;
       }
 
       button {
@@ -210,6 +233,41 @@ html(lang="es")
             input#producto-categoria(type="text" name="categoria" maxlength="80")
             button(type="submit") Guardar producto
 
+          //- Formulario para registrar repartidores con sus datos requeridos.
+          form(action="/agregar-repartidor" method="POST")
+            h3 Nuevo repartidor
+            label(for="repartidor-nombre") Nombre
+            input#repartidor-nombre(type="text" name="nombre" required maxlength="120")
+            label(for="repartidor-telefono") Teléfono
+            input#repartidor-telefono(type="tel" name="telefono" required maxlength="40")
+            label(for="repartidor-vehiculo") Vehículo
+            input#repartidor-vehiculo(type="text" name="vehiculo" required maxlength="80")
+            button(type="submit") Guardar repartidor
+
+          //- Formulario para crear un pedido asociado a un cliente y producto registrados.
+          form(action="/agregar-pedido" method="POST")
+            h3 Agregar Nuevo Pedido
+            label(for="pedido-cliente") Cliente
+            select#pedido-cliente(name="idCliente" required)
+              option(value="" selected disabled) Selecciona un cliente
+              each cliente in clientes
+                option(value=cliente._id)= cliente.nombre
+            label(for="pedido-producto") Producto
+            select#pedido-producto(name="idProductos" required)
+              option(value="" selected disabled) Selecciona un producto
+              each producto in productos
+                option(value=producto._id)= `${producto.nombre} - $${producto.precio.toFixed(2)}`
+            label(for="pedido-repartidor") Repartidor
+            select#pedido-repartidor(name="idRepartidor")
+              option(value="" selected) Sin asignar
+              each repartidor in repartidores
+                option(value=repartidor._id)= `${repartidor.nombre} (${repartidor.disponible ? "Disponible" : "No disponible"})`
+            label(for="pedido-monto") Monto total
+            input#pedido-monto(type="number" name="montoTotal" min="0.01" step="0.01" required)
+            label(for="pedido-direccion") Dirección de entrega
+            input#pedido-direccion(type="text" name="direccionEntrega" maxlength="200" required)
+            button(type="submit") Guardar pedido
+
       //- Tabla de clientes consultados desde MongoDB.
       section#clientes.panel
         h2 Clientes
@@ -220,6 +278,7 @@ html(lang="es")
                 th(scope="col") Nombre
                 th(scope="col") Teléfono
                 th(scope="col") Dirección
+                th(scope="col") Acciones
             tbody
               if clientes.length
                 each cliente in clientes
@@ -227,9 +286,12 @@ html(lang="es")
                     td= cliente.nombre
                     td= cliente.telefono || "Sin teléfono"
                     td= cliente.direccion
+                    td
+                      form(action=`/eliminar-cliente/${cliente._id}` method="POST")
+                        button.delete-button(type="submit") Eliminar
               else
                 tr
-                  td.empty-state(colspan="3") Todavía no hay clientes registrados.
+                  td.empty-state(colspan="4") Todavía no hay clientes registrados.
 
       //- Tabla de productos consultados desde MongoDB.
       section#productos.panel
@@ -242,6 +304,7 @@ html(lang="es")
                 th(scope="col") Categoría
                 th(scope="col") Precio
                 th(scope="col") Stock
+                th(scope="col") Acciones
             tbody
               if productos.length
                 each producto in productos
@@ -250,9 +313,12 @@ html(lang="es")
                     td= producto.categoria || "Sin categoría"
                     td= producto.precio.toFixed(2)
                     td= producto.stock
+                    td
+                      form(action=`/eliminar-producto/${producto._id}` method="POST")
+                        button.delete-button(type="submit") Eliminar
               else
                 tr
-                  td.empty-state(colspan="4") Todavía no hay productos registrados.
+                  td.empty-state(colspan="5") Todavía no hay productos registrados.
 
       //- Tabla de pedidos con referencias pobladas a clientes y productos.
       section#pedidos.panel
@@ -263,8 +329,12 @@ html(lang="es")
               tr
                 th(scope="col") Cliente
                 th(scope="col") Productos
+                th(scope="col") Monto total
+                th(scope="col") Dirección de entrega
                 th(scope="col") Estado
+                th(scope="col") Repartidor
                 th(scope="col") Creado
+                th(scope="col") Acciones
             tbody
               if pedidos.length
                 each pedido in pedidos
@@ -278,8 +348,14 @@ html(lang="es")
                           | #{producto ? producto.nombre : "Producto no disponible"}
                       else
                         | Sin productos
+                    td= pedido.montoTotal !== undefined ? `$${pedido.montoTotal.toFixed(2)}` : "Sin monto"
+                    td= pedido.direccionEntrega || "Sin dirección"
                     td= pedido.estado
+                    td= pedido.idRepartidor ? pedido.idRepartidor.nombre : "Sin asignar"
                     td= pedido.createdAt ? pedido.createdAt.toLocaleString("es") : "Sin fecha"
+                    td
+                      form(action=`/eliminar-pedido/${pedido._id}` method="POST")
+                        button.delete-button(type="submit") Eliminar
               else
                 tr
-                  td.empty-state(colspan="4") Todavía no hay pedidos registrados.
+                  td.empty-state(colspan="8") Todavía no hay pedidos registrados.
