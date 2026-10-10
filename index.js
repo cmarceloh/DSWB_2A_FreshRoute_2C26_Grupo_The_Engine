@@ -29,7 +29,7 @@ app.set("view engine", "pug");
 // 4. Controlador de la página principal: consulta las colecciones para el panel.
 app.get("/", async (req, res) => {
   try {
-    const [clientes, productos, pedidos, repartidores] = await Promise.all([
+    const [clientes, productos, repartidores, pedidos] = await Promise.all([
       Cliente.find().sort({ nombre: 1 }),
       Producto.find().sort({ nombre: 1 }),
       Repartidor.find().sort({ nombre: 1 }),
@@ -243,6 +243,24 @@ app.post("/eliminar-pedido/:id", async (req, res) => {
     console.error("Error al eliminar el pedido:", error.message);
     res.redirect(
       `/?error=${encodeURIComponent("No se pudo eliminar el pedido.")}`,
+    );
+  }
+});
+
+// Controlador del formulario: elimina un repartidor y vuelve al panel.
+app.post("/eliminar-repartidor/:id", async (req, res) => {
+  try {
+    const repartidor = await Repartidor.findByIdAndDelete(req.params.id);
+    if (!repartidor) {
+      return res.redirect(
+        `/?error=${encodeURIComponent("No se encontró el repartidor seleccionado.")}`,
+      );
+    }
+    res.redirect("/");
+  } catch (error) {
+    console.error("Error al eliminar el repartidor:", error.message);
+    res.redirect(
+      `/?error=${encodeURIComponent("No se pudo eliminar el repartidor.")}`,
     );
   }
 });

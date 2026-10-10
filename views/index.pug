@@ -199,6 +199,7 @@ html(lang="es")
     main
       nav.section-nav(aria-label="Secciones del panel")
         a(href="#formularios") Carga de datos
+        a(href="#repartidores") Repartidores
         a(href="#clientes") Clientes
         a(href="#productos") Productos
         a(href="#pedidos") Pedidos
@@ -267,6 +268,33 @@ html(lang="es")
             label(for="pedido-direccion") Dirección de entrega
             input#pedido-direccion(type="text" name="direccionEntrega" maxlength="200" required)
             button(type="submit") Guardar pedido
+
+      //- Tabla de repartidores consultados desde MongoDB.
+      section#repartidores.panel
+        h2 Repartidores
+        .table-wrap
+          table
+            thead
+              tr
+                th(scope="col") Nombre
+                th(scope="col") Teléfono
+                th(scope="col") Vehículo
+                th(scope="col") Disponibilidad
+                th(scope="col") Acciones
+            tbody
+              if repartidores.length
+                each repartidor in repartidores
+                  tr
+                    td= repartidor.nombre
+                    td= repartidor.telefono
+                    td= repartidor.vehiculo
+                    td= repartidor.disponible ? "Disponible" : "No disponible"
+                    td
+                      form(action=`/eliminar-repartidor/${repartidor._id}` method="POST")
+                        button.delete-button(type="submit") Eliminar
+              else
+                tr
+                  td.empty-state(colspan="5") Todavía no hay repartidores registrados.
 
       //- Tabla de clientes consultados desde MongoDB.
       section#clientes.panel
