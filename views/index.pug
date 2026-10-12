@@ -263,10 +263,8 @@ html(lang="es")
               option(value="" selected) Sin asignar
               each repartidor in repartidores
                 option(value=repartidor._id)= `${repartidor.nombre} (${repartidor.disponible ? "Disponible" : "No disponible"})`
-            label(for="pedido-monto") Monto total
-            input#pedido-monto(type="number" name="montoTotal" min="0.01" step="0.01" required)
-            label(for="pedido-direccion") Dirección de entrega
-            input#pedido-direccion(type="text" name="direccionEntrega" maxlength="200" required)
+            label(for="pedido-direccion") Dirección de entrega (opcional, por defecto la del cliente)
+            input#pedido-direccion(type="text" name="direccionEntrega" maxlength="200")
             button(type="submit") Guardar pedido
 
       //- Tabla de repartidores consultados desde MongoDB.

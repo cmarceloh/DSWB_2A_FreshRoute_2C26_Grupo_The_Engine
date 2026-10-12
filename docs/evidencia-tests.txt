@@ -1,0 +1,60 @@
+Resultado de npm test
+=====================
+
+PASS tests/panel.test.js
+  ✓ Panel web (Pug) GET / renderiza el panel
+  ✓ Panel web (Pug) agregar un cliente desde el formulario lo muestra en el panel
+  ✓ Panel web (Pug) un teléfono repetido redirige con el mensaje de error
+  ✓ Panel web (Pug) no permite eliminar un cliente con pedidos activos
+
+PASS tests/pedidos.test.js
+  ✓ API de pedidos POST crea un pedido en estado Pendiente y calcula el monto
+  ✓ API de pedidos POST sin datos obligatorios o con lista vacía devuelve 400
+  ✓ API de pedidos POST con cliente, producto o repartidor inexistente devuelve 404
+  ✓ API de pedidos POST con un ID mal formado devuelve 400
+  ✓ API de pedidos GET lista pedidos con relaciones y filtra por estado y cliente
+  ✓ API de pedidos GET por ID: 200, 404 si no existe y 400 si es inválido
+  ✓ API de pedidos cambio de estado avanza el estado correctamente
+  ✓ API de pedidos cambio de estado rechaza un estado inexistente o faltante (400)
+  ✓ API de pedidos cambio de estado un pedido entregado no vuelve a Pendiente (400)
+  ✓ API de pedidos cambio de estado un pedido cancelado no puede pasar a En camino (400)
+  ✓ API de pedidos cambio de estado pedido inexistente devuelve 404
+  ✓ API de pedidos un pedido entregado permite borrar cliente y producto
+
+PASS tests/productos.test.js
+  ✓ API de productos POST crea un producto (201)
+  ✓ API de productos POST sin precio devuelve 400
+  ✓ API de productos POST con precio 0 o negativo devuelve 400
+  ✓ API de productos POST con stock negativo devuelve 400
+  ✓ API de productos POST con precio de tipo incorrecto devuelve 400
+  ✓ API de productos POST con nombre repetido (sin importar mayúsculas) devuelve 409
+  ✓ API de productos GET lista y filtra por nombre y categoría
+  ✓ API de productos GET por ID: 200, 404 si no existe y 400 si es inválido
+  ✓ API de productos PUT actualiza datos y rechaza valores inválidos
+  ✓ API de productos PUT /stock suma y resta stock, y no permite quedar en negativo
+  ✓ API de productos DELETE elimina el producto y luego devuelve 404
+  ✓ API de productos DELETE con pedidos activos devuelve 409
+
+PASS tests/clientes.test.js
+  ✓ API de clientes POST crea un cliente (201)
+  ✓ API de clientes POST sin teléfono devuelve 400
+  ✓ API de clientes POST con tipo de dato incorrecto devuelve 400
+  ✓ API de clientes POST con teléfono repetido devuelve 409
+  ✓ API de clientes GET lista los clientes y filtra por nombre
+  ✓ API de clientes GET por ID devuelve el cliente; 404 si no existe; 400 si el ID es inválido
+  ✓ API de clientes PUT actualiza los datos del cliente
+  ✓ API de clientes PUT con un teléfono ya usado devuelve 409
+  ✓ API de clientes DELETE elimina el cliente y luego devuelve 404
+  ✓ API de clientes DELETE con pedidos activos devuelve 409
+  ✓ Rutas inexistentes y JSON inválido una ruta que no existe devuelve 404 en JSON
+  ✓ Rutas inexistentes y JSON inválido un JSON malformado devuelve 400
+
+PASS tests/repartidores.test.js
+  ✓ API de repartidores POST crea un repartidor disponible (201)
+  ✓ API de repartidores POST con datos faltantes devuelve 400
+  ✓ API de repartidores GET lista y GET por ID (200, 404, 400)
+  ✓ API de repartidores PUT actualiza la disponibilidad
+  ✓ API de repartidores DELETE elimina el repartidor y luego devuelve 404
+
+Test Suites: 5 passed, 5 total
+Tests:       45 passed, 45 total
