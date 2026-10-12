@@ -309,14 +309,6 @@ Se realizaron pruebas mediante Thunder Client para verificar el funcionamiento d
 
 ---
 
-## 📚 Documentación adicional
-
-- [Requerimientos funcionales y no funcionales](docs/requerimientos.md)
-- [Modelo de datos y flujo de estados](docs/modelo-de-datos.md)
-- [Plan de pruebas](docs/plan-de-pruebas.md)
-
----
-
 # 👥 Roles del Equipo y Bibliografía — FreshRoute B2B
 
 ## 1. Integrantes, roles y responsabilidades
