@@ -1,135 +1,91 @@
 const Cliente = require("../models/Cliente");
 const Pedido = require("../models/Pedido");
+const ErrorDeValidacion = require("../models/ErrorDeValidacion");
+const ErrorNoEncontrado = require("../models/ErrorNoEncontrado");
+const ErrorDeConflicto = require("../models/ErrorDeConflicto");
+
+// Los errores lanzados acá los atrapa el middleware de errores (Express 5 captura promesas rechazadas).
+
+// Busca un cliente por ID o lanza ErrorNoEncontrado
+const buscarCliente = async (id) => {
+  const cliente = await Cliente.findById(id);
+  if (!cliente) throw new ErrorNoEncontrado("Cliente no encontrado");
+  return cliente;
+};
+
+// Escapa los caracteres especiales de regex para usar texto del usuario en un filtro
+const escaparRegex = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Controlador para obtener todos los clientes (con filtro opcional por query param)
 const obtenerClientes = async (req, res) => {
-  try {
-    const { nombre } = req.query;
-    const filtro = {};
+  const { nombre } = req.query;
+  const filtro = {};
 
-    // Busqueda parcial por nombre sin importar mayusculas o minusculas
-    if (nombre) {
-      filtro.nombre = { $regex: nombre, $options: "i" };
-    }
-
-    const clientes = await Cliente.find(filtro);
-    res.status(200).json(clientes);
-  } catch (error) {
-    res
-      .status(500)
-      .json({
-        error: "Error al obtener la lista de clientes",
-        detalle: error.message,
-      });
+  // Busqueda parcial por nombre sin importar mayusculas o minusculas
+  if (nombre) {
+    filtro.nombre = { $regex: escaparRegex(nombre), $options: "i" };
   }
+
+  res.status(200).json(await Cliente.find(filtro));
 };
 
 // Controlador para obtener un cliente por ID de MongoDB
 const obtenerClientePorId = async (req, res) => {
-  try {
-    const cliente = await Cliente.findById(req.params.id);
-    if (!cliente) {
-      return res.status(404).json({ error: "Cliente no encontrado" });
-    }
-    res.status(200).json(cliente);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ error: "ID de cliente no valido", detalle: error.message });
-  }
+  res.status(200).json(await buscarCliente(req.params.id));
 };
 
 // Controlador para crear un cliente
 const crearCliente = async (req, res) => {
-  try {
-    const { nombre, telefono, direccion } = req.body;
+  const { nombre, telefono, direccion } = req.body;
 
-    // Validacion: campos obligatorios
-    if (!nombre || !telefono) {
-      return res
-        .status(400)
-        .json({ error: "El cliente debe tener nombre y telefono" });
-    }
-
-    // Validacion: no permitir dos clientes con el mismo telefono
-    const telefonoDuplicado = await Cliente.findOne({ telefono });
-    if (telefonoDuplicado) {
-      return res
-        .status(409)
-        .json({ error: "Ya existe un cliente registrado con ese telefono" });
-    }
-
-    const nuevoCliente = new Cliente({ nombre, telefono, direccion });
-    await nuevoCliente.save();
-
-    res
-      .status(201)
-      .json({ mensaje: "Cliente creado con exito", cliente: nuevoCliente });
-  } catch (error) {
-    res
-      .status(400)
-      .json({ error: "Error al crear el cliente", detalle: error.message });
+  // Validacion: tipos de datos (los campos obligatorios los valida el schema)
+  if (
+    [nombre, telefono, direccion].some(
+      (valor) => valor !== undefined && typeof valor !== "string",
+    )
+  ) {
+    throw new ErrorDeValidacion("Nombre, telefono y direccion deben ser texto");
   }
+
+  // El telefono duplicado lo rechaza el indice unico (409 en el middleware)
+  const nuevoCliente = await Cliente.create({ nombre, telefono, direccion });
+
+  res
+    .status(201)
+    .json({ mensaje: "Cliente creado con exito", cliente: nuevoCliente });
 };
 
 // Controlador para actualizar datos de un cliente
 const actualizarCliente = async (req, res) => {
-  try {
-    const cliente = await Cliente.findById(req.params.id);
-    if (!cliente) {
-      return res.status(404).json({ error: "Cliente no encontrado" });
-    }
+  const cliente = await buscarCliente(req.params.id);
 
-    // Ejecutar el metodo personalizado de la clase/esquema para actualizar los datos
-    cliente.actualizarDatos(req.body);
-    await cliente.save();
+  // Ejecutar el metodo personalizado del esquema para actualizar los datos
+  cliente.actualizarDatos(req.body);
+  await cliente.save();
 
-    res.status(200).json({
-      mensaje: "Cliente actualizado exitosamente",
-      cliente,
-    });
-  } catch (error) {
-    res
-      .status(400)
-      .json({
-        error: "Error al actualizar el cliente",
-        detalle: error.message,
-      });
-  }
+  res.status(200).json({
+    mensaje: "Cliente actualizado exitosamente",
+    cliente,
+  });
 };
 
 // Controlador para eliminar un cliente
 const eliminarCliente = async (req, res) => {
-  try {
-    const cliente = await Cliente.findById(req.params.id);
-    if (!cliente) {
-      return res.status(404).json({ error: "Cliente no encontrado" });
-    }
+  const cliente = await buscarCliente(req.params.id);
 
-    // Regla de negocio: no se puede eliminar un cliente que tiene pedidos activos
-    const estadosActivos = ["Pendiente", "Preparado", "En camino"];
-    const tienePedidosActivos = await Pedido.findOne({
-      idCliente: req.params.id,
-      estado: { $in: estadosActivos },
-    });
-
-    if (tienePedidosActivos) {
-      return res.status(409).json({
-        error: "No se puede eliminar un cliente con pedidos activos",
-      });
-    }
-
-    await Cliente.findByIdAndDelete(req.params.id);
-
-    res.status(200).json({
-      mensaje: "Cliente eliminado exitosamente",
-      cliente,
-    });
-  } catch (error) {
-    res
-      .status(400)
-      .json({ error: "Error al eliminar el cliente", detalle: error.message });
+  // Regla de negocio: no se puede eliminar un cliente que tiene pedidos activos
+  if (await Pedido.existenActivos({ idCliente: cliente._id })) {
+    throw new ErrorDeConflicto(
+      "No se puede eliminar un cliente con pedidos activos",
+    );
   }
+
+  await cliente.deleteOne();
+
+  res.status(200).json({
+    mensaje: "Cliente eliminado exitosamente",
+    cliente,
+  });
 };
 
 module.exports = {

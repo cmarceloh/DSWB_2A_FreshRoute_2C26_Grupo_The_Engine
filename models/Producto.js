@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const ErrorDeValidacion = require("./ErrorDeValidacion");
 
 // Definición del esquema para la colección Productos
 const productoSchema = new mongoose.Schema(
@@ -11,7 +12,10 @@ const productoSchema = new mongoose.Schema(
     precio: {
       type: Number,
       required: [true, "El precio es obligatorio"],
-      min: [0, "El precio no puede ser negativo"],
+      validate: {
+        validator: (valor) => valor > 0,
+        message: "El precio debe ser mayor a cero",
+      },
     },
     stock: {
       type: Number,
@@ -29,6 +33,12 @@ const productoSchema = new mongoose.Schema(
   },
 );
 
+// El nombre es único sin distinguir mayúsculas ni minúsculas
+productoSchema.index(
+  { nombre: 1 },
+  { unique: true, collation: { locale: "es", strength: 2 } },
+);
+
 // Método de instancia para actualizar datos generales del producto
 productoSchema.methods.actualizarDatos = function (nuevosDatos) {
   const { nombre, precio, stock, categoria } = nuevosDatos;
@@ -39,12 +49,14 @@ productoSchema.methods.actualizarDatos = function (nuevosDatos) {
   if (categoria) this.categoria = categoria;
 };
 
-// Método de instancia para ajustar el stock (suma o resta según el valor recibido)
+// Método de instancia para ajustar el stock (suma o resta según la cantidad recibida)
 productoSchema.methods.ajustarStock = function (cantidad) {
   const nuevoStock = this.stock + cantidad;
 
   if (nuevoStock < 0) {
-    throw new Error("No hay stock suficiente para realizar el ajuste");
+    throw new ErrorDeValidacion(
+      "No hay stock suficiente para realizar el ajuste",
+    );
   }
 
   this.stock = nuevoStock;

@@ -10,7 +10,9 @@ const clienteSchema = new mongoose.Schema(
     },
     telefono: {
       type: String,
+      required: [true, "El teléfono es obligatorio"],
       trim: true,
+      unique: true, // No se permiten dos clientes con el mismo teléfono
     },
     direccion: {
       type: String,

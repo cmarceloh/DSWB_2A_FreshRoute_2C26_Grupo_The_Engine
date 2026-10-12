@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --runInBand --verbose",
-    "dev": "nodemon index.js"
+    "test": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js --runInBand --verbose",
+    "dev": "nodemon index.js",
+    "seed": "node seed.js"
   },
   "repository": {
     "type": "git",
@@ -25,8 +26,16 @@
     "mongoose": "^9.11.1",
     "pug": "^3.0.4"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "testTimeout": 60000
+  },
   "devDependencies": {
     "jest": "^30.5.1",
+    "mongodb-memory-server": "^11.3.0",
     "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
   }

@@ -1,194 +1,132 @@
 const Producto = require("../models/Producto");
 const Pedido = require("../models/Pedido");
+const ErrorDeValidacion = require("../models/ErrorDeValidacion");
+const ErrorNoEncontrado = require("../models/ErrorNoEncontrado");
+const ErrorDeConflicto = require("../models/ErrorDeConflicto");
+
+// Los errores lanzados acá los atrapa el middleware de errores (Express 5 captura promesas rechazadas).
+
+// Busca un producto por ID o lanza ErrorNoEncontrado
+const buscarProducto = async (id) => {
+  const producto = await Producto.findById(id);
+  if (!producto) throw new ErrorNoEncontrado("Producto no encontrado");
+  return producto;
+};
+
+// Escapa los caracteres especiales de regex para usar texto del usuario en un filtro
+const escaparRegex = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Obtener todos los productos con filtros opcionales (nombre y categoria)
 exports.obtenerProductos = async (req, res) => {
-  try {
-    const { nombre, categoria } = req.query;
-    const filtro = {};
+  const { nombre, categoria } = req.query;
+  const filtro = {};
 
-    // Busqueda parcial por nombre sin importar mayusculas o minusculas
-    if (nombre) {
-      filtro.nombre = { $regex: nombre, $options: "i" };
-    }
-
-    // Filtro exacto por categoria
-    if (categoria) {
-      filtro.categoria = { $regex: `^${categoria}$`, $options: "i" };
-    }
-
-    const productos = await Producto.find(filtro);
-    res.status(200).json(productos);
-  } catch (error) {
-    res
-      .status(500)
-      .json({
-        error: "Error al obtener la lista de productos",
-        detalle: error.message,
-      });
+  // Busqueda parcial por nombre sin importar mayusculas o minusculas
+  if (nombre) {
+    filtro.nombre = { $regex: escaparRegex(nombre), $options: "i" };
   }
+
+  // Filtro exacto por categoria
+  if (categoria) {
+    filtro.categoria = {
+      $regex: `^${escaparRegex(categoria)}$`,
+      $options: "i",
+    };
+  }
+
+  res.status(200).json(await Producto.find(filtro));
 };
 
 // Obtener un producto especifico por su ID de MongoDB
 exports.obtenerProductoPorId = async (req, res) => {
-  try {
-    const producto = await Producto.findById(req.params.id);
-    if (!producto) {
-      return res.status(404).json({ error: "Producto no encontrado" });
-    }
-    res.status(200).json(producto);
-  } catch (error) {
-    res
-      .status(400)
-      .json({ error: "ID de producto no valido", detalle: error.message });
-  }
+  res.status(200).json(await buscarProducto(req.params.id));
 };
 
 // Crear un nuevo producto en la base de datos
 exports.crearProducto = async (req, res) => {
-  try {
-    const { nombre, precio, stock, categoria } = req.body;
+  const { nombre, precio, stock, categoria } = req.body;
 
-    // Validacion de campos obligatorios
-    if (!nombre || precio === undefined || stock === undefined) {
-      return res
-        .status(400)
-        .json({ error: "El producto debe tener nombre, precio y stock" });
-    }
-
-    // Validaciones de tipos de datos y valores permitidos
-    if (typeof precio !== "number" || precio <= 0) {
-      return res
-        .status(400)
-        .json({ error: "El precio debe ser un numero mayor a cero" });
-    }
-
-    if (typeof stock !== "number" || stock < 0) {
-      return res.status(400).json({ error: "El stock no puede ser negativo" });
-    }
-
-    // Verificacion de duplicados por nombre
-    const productoExistente = await Producto.findOne({
-      nombre: { $regex: `^${nombre}$`, $options: "i" },
-    });
-
-    if (productoExistente) {
-      return res
-        .status(409)
-        .json({ error: "Ya existe un producto registrado con ese nombre" });
-    }
-
-    const nuevoProducto = new Producto({ nombre, precio, stock, categoria });
-    await nuevoProducto.save();
-
-    res
-      .status(201)
-      .json({ mensaje: "Producto creado con exito", producto: nuevoProducto });
-  } catch (error) {
-    res
-      .status(400)
-      .json({ error: "Error al crear el producto", detalle: error.message });
+  // Validaciones de tipos de datos (los obligatorios y los rangos los valida el schema)
+  if (nombre !== undefined && typeof nombre !== "string") {
+    throw new ErrorDeValidacion("El nombre debe ser texto");
   }
+  if (
+    (precio !== undefined && typeof precio !== "number") ||
+    (stock !== undefined && typeof stock !== "number")
+  ) {
+    throw new ErrorDeValidacion("El precio y el stock deben ser numericos");
+  }
+
+  // El nombre duplicado lo rechaza el indice unico (409 en el middleware)
+  const nuevoProducto = await Producto.create({
+    nombre,
+    precio,
+    stock,
+    categoria,
+  });
+
+  res
+    .status(201)
+    .json({ mensaje: "Producto creado con exito", producto: nuevoProducto });
 };
 
 // Actualizar datos generales de un producto por ID
 exports.actualizarProducto = async (req, res) => {
-  try {
-    const producto = await Producto.findById(req.params.id);
-    if (!producto) {
-      return res.status(404).json({ error: "Producto no encontrado" });
-    }
+  const producto = await buscarProducto(req.params.id);
+  const { nombre, precio, stock } = req.body;
 
-    const { precio, stock } = req.body;
-
-    if (precio !== undefined && (typeof precio !== "number" || precio <= 0)) {
-      return res
-        .status(400)
-        .json({ error: "El precio debe ser un numero mayor a cero" });
-    }
-
-    if (stock !== undefined && (typeof stock !== "number" || stock < 0)) {
-      return res
-        .status(400)
-        .json({ error: "El stock debe ser un numero mayor o igual a cero" });
-    }
-
-    // Se invoca el metodo de instancia del modelo Producto
-    producto.actualizarDatos(req.body);
-    await producto.save();
-
-    res
-      .status(200)
-      .json({ mensaje: "Producto actualizado exitosamente", producto });
-  } catch (error) {
-    res
-      .status(400)
-      .json({
-        error: "Error al actualizar el producto",
-        detalle: error.message,
-      });
+  if (nombre !== undefined && typeof nombre !== "string") {
+    throw new ErrorDeValidacion("El nombre debe ser texto");
   }
+  if (precio !== undefined && typeof precio !== "number") {
+    throw new ErrorDeValidacion("El precio debe ser un numero");
+  }
+  if (stock !== undefined && typeof stock !== "number") {
+    throw new ErrorDeValidacion("El stock debe ser un numero");
+  }
+
+  // Se invoca el metodo de instancia del modelo; los rangos los valida el schema al guardar
+  producto.actualizarDatos(req.body);
+  await producto.save();
+
+  res
+    .status(200)
+    .json({ mensaje: "Producto actualizado exitosamente", producto });
 };
 
 // Ajustar el stock de un producto por ID
 exports.ajustarStock = async (req, res) => {
-  try {
-    const { cantidad } = req.body;
+  const { cantidad } = req.body;
 
-    if (cantidad === undefined || typeof cantidad !== "number") {
-      return res
-        .status(400)
-        .json({ error: "Debe indicar la cantidad a ajustar como un numero" });
-    }
-
-    const producto = await Producto.findById(req.params.id);
-    if (!producto) {
-      return res.status(404).json({ error: "Producto no encontrado" });
-    }
-
-    // Se invoca el metodo del esquema que valida que el stock no quede negativo
-    producto.ajustarStock(cantidad);
-    await producto.save();
-
-    res
-      .status(200)
-      .json({ mensaje: "Stock actualizado exitosamente", producto });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+  if (typeof cantidad !== "number") {
+    throw new ErrorDeValidacion(
+      "Debe indicar la cantidad a ajustar como un numero",
+    );
   }
+
+  const producto = await buscarProducto(req.params.id);
+
+  // Se invoca el metodo del esquema que valida que el stock no quede negativo
+  producto.ajustarStock(cantidad);
+  await producto.save();
+
+  res.status(200).json({ mensaje: "Stock actualizado exitosamente", producto });
 };
 
 // Eliminar un producto de la base de datos
 exports.eliminarProducto = async (req, res) => {
-  try {
-    const producto = await Producto.findById(req.params.id);
-    if (!producto) {
-      return res.status(404).json({ error: "Producto no encontrado" });
-    }
+  const producto = await buscarProducto(req.params.id);
 
-    // Regla de negocio: no eliminar productos con pedidos activos en el sistema
-    const estadosActivos = ["Pendiente", "Preparado", "En camino"];
-    const tienePedidosActivos = await Pedido.findOne({
-      idProductos: req.params.id,
-      estado: { $in: estadosActivos },
-    });
-
-    if (tienePedidosActivos) {
-      return res
-        .status(409)
-        .json({
-          error: "No se puede eliminar un producto con pedidos activos",
-        });
-    }
-
-    await Producto.findByIdAndDelete(req.params.id);
-
-    res
-      .status(200)
-      .json({ mensaje: "Producto eliminado exitosamente", producto });
-  } catch (error) {
-    res
-      .status(400)
-      .json({ error: "Error al eliminar el producto", detalle: error.message });
+  // Regla de negocio: no eliminar productos con pedidos activos en el sistema
+  if (await Pedido.existenActivos({ idProductos: producto._id })) {
+    throw new ErrorDeConflicto(
+      "No se puede eliminar un producto con pedidos activos",
+    );
   }
+
+  await producto.deleteOne();
+
+  res
+    .status(200)
+    .json({ mensaje: "Producto eliminado exitosamente", producto });
 };
