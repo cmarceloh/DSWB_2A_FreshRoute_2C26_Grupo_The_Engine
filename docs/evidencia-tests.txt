@@ -1,8 +1,16 @@
 Resultado de npm test
 =====================
 
+PASS tests/auth.test.js
+  ✓ Autenticación, Cookies, Sesiones y JWT POST /api/usuarios crea un usuario con password hasheado (bcrypt) y no devuelve passwordHash
+  ✓ Autenticación, Cookies, Sesiones y JWT POST /api/usuarios rechaza un username duplicado con 409
+  ✓ Autenticación, Cookies, Sesiones y JWT POST /api/login devuelve un token JWT con credenciales válidas y 401 con inválidas
+  ✓ Autenticación, Cookies, Sesiones y JWT GET /api/perfil protege la ruta exigiendo un token Bearer válido
+  ✓ Autenticación, Cookies, Sesiones y JWT Flujo de sesión web con Passport y cookies: /signup, /login y /signout
+
 PASS tests/panel.test.js
-  ✓ Panel web (Pug) GET / renderiza el panel
+  ✓ Panel web (Pug) GET / sin sesión redirige a /login
+  ✓ Panel web (Pug) GET / renderiza el panel cuando el usuario está autenticado
   ✓ Panel web (Pug) agregar un cliente desde el formulario lo muestra en el panel
   ✓ Panel web (Pug) un teléfono repetido redirige con el mensaje de error
   ✓ Panel web (Pug) no permite eliminar un cliente con pedidos activos
@@ -56,5 +64,5 @@ PASS tests/repartidores.test.js
   ✓ API de repartidores PUT actualiza la disponibilidad
   ✓ API de repartidores DELETE elimina el repartidor y luego devuelve 404
 
-Test Suites: 5 passed, 5 total
-Tests:       45 passed, 45 total
+Test Suites: 6 passed, 6 total
+Tests:       51 passed, 51 total

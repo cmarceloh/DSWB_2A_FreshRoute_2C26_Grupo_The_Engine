@@ -32,6 +32,10 @@ const traducirError = (err) => {
   if (err.type === "entity.parse.failed") {
     return { status: 400, mensaje: "El cuerpo de la petición no es un JSON válido" };
   }
+  // Token JWT inválido o vencido (D10, pág. 44)
+  if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+    return { status: 401, mensaje: "invalid token" };
+  }
   return { status: 500, mensaje: "Error interno del servidor" };
 };
 

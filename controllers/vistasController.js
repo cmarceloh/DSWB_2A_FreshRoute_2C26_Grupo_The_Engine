@@ -23,7 +23,7 @@ const accion = (funcion) => async (req, res) => {
   }
 };
 
-// Consulta las colecciones y renderiza el panel.
+// Consulta las colecciones y renderiza el panel para el usuario autenticado.
 exports.mostrarPanel = async (req, res) => {
   const [clientes, productos, repartidores, pedidos] = await Promise.all([
     Cliente.find().sort({ nombre: 1 }),
@@ -38,6 +38,8 @@ exports.mostrarPanel = async (req, res) => {
 
   res.render("index", {
     titulo: "FreshRoute",
+    user: req.user || null,
+    ultimoAcceso: req.cookies?.ultimoAcceso || null,
     clientes,
     productos,
     pedidos,

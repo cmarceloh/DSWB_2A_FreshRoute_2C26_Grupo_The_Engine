@@ -1,9 +1,11 @@
 // Seeder: vacía las colecciones y carga datos de ejemplo para probar la app.
 // Uso: npm run seed
-// ATENCIÓN: borra todos los clientes, productos, repartidores y pedidos de la base indicada en MONGO_URI.
+// ATENCIÓN: borra todos los usuarios, clientes, productos, repartidores y pedidos de la base indicada en MONGO_URI.
 require("dotenv").config({ quiet: true });
 
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const Usuario = require("./models/Usuario");
 const Cliente = require("./models/Cliente");
 const Producto = require("./models/Producto");
 const Repartidor = require("./models/Repartidor");
@@ -48,16 +50,31 @@ const pedidos = [
 const sembrar = async () => {
   const uri = process.env.MONGO_URI || "mongodb://localhost:27017/freshroute";
   await mongoose.connect(uri);
-  console.log(`Conectado a ${mongoose.connection.name}`);
+  console.log(`Conectado a ${mongoose.connection.name} (${mongoose.connection.host})`);
 
   // Los índices únicos deben existir antes de insertar
   await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
 
   await Promise.all([
+    Usuario.deleteMany({}),
     Pedido.deleteMany({}),
     Cliente.deleteMany({}),
     Producto.deleteMany({}),
     Repartidor.deleteMany({}),
+  ]);
+
+  // Crea usuarios operadores iniciales con contraseña hasheada mediante bcrypt (D10, pág. 26)
+  const usuariosCreados = await Usuario.create([
+    {
+      username: "admin",
+      name: "Administrador FreshRoute",
+      passwordHash: await bcrypt.hash("admin1234", 10),
+    },
+    {
+      username: "theengine",
+      name: "Operador The Engine",
+      passwordHash: await bcrypt.hash("engine2026", 10),
+    },
   ]);
 
   const clientesCreados = await Cliente.create(clientes);
@@ -78,8 +95,8 @@ const sembrar = async () => {
   }
 
   console.log(
-    `Datos cargados: ${clientesCreados.length} clientes, ${productosCreados.length} productos, ` +
-      `${repartidoresCreados.length} repartidores y ${pedidos.length} pedidos.`,
+    `Datos cargados en MongoDB Atlas: ${usuariosCreados.length} usuarios, ${clientesCreados.length} clientes, ` +
+      `${productosCreados.length} productos, ${repartidoresCreados.length} repartidores y ${pedidos.length} pedidos.`,
   );
 };
 

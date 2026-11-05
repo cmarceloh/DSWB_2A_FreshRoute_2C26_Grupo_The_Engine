@@ -1,10 +1,12 @@
 # 🚚 DSWB_2A_FreshRoute_2C26_Grupo_The_Engine
 
-API REST y panel web para la gestión de pedidos de FreshRoute, un sistema de distribución. Permite administrar clientes, productos, repartidores y pedidos.
+API REST y panel web para la gestión de pedidos de FreshRoute, un sistema de distribución B2B. Permite administrar usuarios operadores, clientes, productos, repartidores y pedidos, con persistencia en **MongoDB Atlas**, autenticación mediante **cookies/sesiones (Passport.js)** y **JSON Web Tokens (JWT)**, y configuración lista para despliegue en **Vercel**.
 
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)
+![MongoDB Atlas](https://img.shields.io/badge/MongoDB_Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white)
+![Passport](https://img.shields.io/badge/Passport-34E27A?style=flat-square&logo=passport&logoColor=black)
+![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
 ![Jest](https://img.shields.io/badge/Jest-C21325?style=flat-square&logo=jest&logoColor=white)
 ![Pug](https://img.shields.io/badge/Pug-A86454?style=flat-square&logo=pug&logoColor=white)
 
@@ -12,12 +14,18 @@ API REST y panel web para la gestión de pedidos de FreshRoute, un sistema de di
 
 ## 🛠 Stack tecnológico
 
-- Node.js + Express 5
-- MongoDB + Mongoose (persistencia)
-- Pug (panel visual en `/` para registrar y consultar los datos)
-- Jest + Supertest + mongodb-memory-server para los tests
+- **Node.js + Express 5** (arquitectura MVC modular + middlewares)
+- **MongoDB Atlas + Mongoose** (persistencia de datos en la nube con esquemas validados y relaciones `ObjectId`)
+- **Autenticación y Seguridad:**
+  - `bcrypt` para encriptación irreversible de contraseñas (`saltRounds = 10`)
+  - `cookie-parser` y `express-session` para administración de cookies (`httpOnly`) y sesiones de usuario
+  - `passport`, `passport-local` y `connect-flash` para estrategias de inicio de sesión (`login`), registro (`signup`) y protección de rutas del panel web
+  - `jsonwebtoken` (JWT) para autenticación stateless mediante token `Bearer` en la API REST
+- **Pug** (motor de plantillas para las vistas `/login`, `/signup` y el panel de gestión `/`)
+- **Jest + Supertest + mongodb-memory-server** (suite de 51 pruebas automatizadas de integración)
+- **Vercel** (`vercel.json` configurado con `@vercel/node` para despliegue en producción)
 
-## 📦 Instalación
+## 📦 Instalación y configuración
 
 Instalar las dependencias:
 
@@ -25,27 +33,45 @@ Instalar las dependencias:
 npm install
 ```
 
-Crear un archivo `.env` a partir del ejemplo y ajustar la URI de MongoDB si hace falta:
+Crear un archivo `.env` a partir de `.env.example`:
 
 ```bash
 cp .env.example .env
 ```
 
-En Windows PowerShell también se puede utilizar:
+En Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-### Variables de entorno
+### Variables de entorno (`.env`)
 
-| Variable | Descripción | Valor por defecto |
+| Variable | Descripción | Valor por defecto / Ejemplo |
 |---|---|---|
 | `PORT` | Puerto del servidor | `3000` |
 | `HOST` | Interfaz de escucha | `127.0.0.1` |
-| `MONGO_URI` | URI de conexión a MongoDB | `mongodb://localhost:27017/freshroute` |
+| `MONGO_URI` | URI de conexión a MongoDB Atlas (o local) | `mongodb+srv://<usuario>:<password>@cluster.mongodb.net/freshroute?retryWrites=true&w=majority` |
+| `SECRET` | Clave secreta para firmar sesiones y tokens JWT | `freshroute_the_engine_secret_key_2026` |
 
-El archivo `.env` no se versiona porque está incluido en `.gitignore`. Se necesita una instancia de MongoDB en funcionamiento, local o en MongoDB Atlas.
+> **Nota de seguridad:** El archivo `.env` no se versiona porque está incluido en `.gitignore`. En Vercel, las variables `MONGO_URI` y `SECRET` se configuran en *Settings → Environment Variables*.
+
+### Carga de datos iniciales (Seed)
+
+Para poblar la base de datos en MongoDB Atlas con usuarios operadores, clientes, productos, repartidores y pedidos de prueba:
+
+```bash
+npm run seed
+```
+
+**Usuarios operadores creados por `npm run seed`:**
+
+| Usuario (`username`) | Contraseña (`password`) | Nombre |
+|---|---|---|
+| `admin` | `admin1234` | Administrador FreshRoute |
+| `theengine` | `engine2026` | Operador The Engine |
+
+También se puede registrar cualquier nuevo usuario directamente desde la vista web `/signup` o mediante `POST /api/usuarios`.
 
 ## 🚀 Uso
 
@@ -55,16 +81,16 @@ Levantar el servidor en modo desarrollo:
 npm run dev
 ```
 
-Levantar el servidor sin recarga automática:
+Levantar el servidor en modo producción:
 
 ```bash
-node index.js
+npm start
 ```
 
-Por defecto, el servidor utiliza el puerto `3000` y escucha en `127.0.0.1`, salvo que se configure otro valor en el archivo `.env`.
-
-- Panel web: `http://localhost:3000/`
-- API REST: `http://localhost:3000/api/...`
+- **Login del panel web:** `http://localhost:3000/login`
+- **Registro de usuario:** `http://localhost:3000/signup`
+- **Panel web (protegido por sesión):** `http://localhost:3000/`
+- **API REST:** `http://localhost:3000/api/...`
 
 ## 🧪 Tests
 
@@ -74,30 +100,60 @@ Ejecutar las pruebas automatizadas:
 npm test
 ```
 
-Los tests cubren los módulos de clientes, productos, repartidores, pedidos y panel web, utilizando Jest y Supertest contra la aplicación Express y una base de datos MongoDB en memoria mediante `mongodb-memory-server`.
-
-No es necesario tener una instancia de MongoDB instalada ni se modifica la base de datos real durante estas pruebas. La primera ejecución puede descargar el binario de MongoDB si todavía no está disponible localmente.
-
-El script utiliza `--experimental-vm-modules` porque el driver de MongoDB necesita este modo para funcionar dentro de Jest en la configuración del proyecto.
+La suite cuenta con **51 tests distribuidos en 6 suites** (`auth`, `clientes`, `productos`, `repartidores`, `pedidos` y `panel`), utilizando Jest y Supertest contra una base de datos MongoDB en memoria (`mongodb-memory-server`), sin afectar los datos reales de MongoDB Atlas.
 
 ## 🗂 Estructura del proyecto
 
 ```text
-index.js          # Punto de entrada: conecta a MongoDB y levanta el servidor
-app.js            # Aplicación Express: middlewares, rutas y errores
-config/           # Configuración de la conexión a MongoDB
-models/           # Schemas de Mongoose, reglas de negocio y clases de error
-controllers/      # Lógica de los endpoints y del panel web
-routes/           # Definición de rutas de Express para API y panel
-middlewares/      # Manejo centralizado de errores y respuestas 404
-views/            # Plantillas Pug del panel web
-tests/            # Pruebas automatizadas con Jest y Supertest
+index.js          # Punto de entrada local y exportación compatible con Vercel
+app.js            # Aplicación Express: cookies, sesiones, Passport, rutas y errores
+vercel.json       # Configuración de despliegue serverless para Vercel (@vercel/node)
+seed.js           # Script de carga inicial de datos y usuarios en MongoDB Atlas
+config/           # Configuración de conexión a MongoDB Atlas (config/db.js)
+passport/         # Estrategias Passport Local (init.js, login.js, signup.js)
+models/           # Schemas Mongoose (Usuario, Cliente, Producto, Repartidor, Pedido)
+controllers/      # Controladores de autenticación, API REST y vistas Pug
+routes/           # Definición de rutas (auth, clientes, productos, repartidores, pedidos, vistas)
+middlewares/      # Autenticación (isAuthenticated, verificarToken), errores y 404
+views/            # Plantillas Pug (login.pug, register.pug, index.pug)
+tests/            # Pruebas automatizadas con Jest y Supertest (6 suites, 51 tests)
 docs/             # Requerimientos, modelo de datos, plan de pruebas y evidencias
 ```
 
 ---
 
-## 📡 Endpoints de la API REST
+## 🔐 Autenticación, Cookies y Sesiones
+
+El proyecto implementa los dos esquemas de autenticación estudiados en la cátedra:
+
+1. **Autenticación basada en Sesiones y Cookies (Panel Web Pug):**
+   - Configurada con `cookie-parser`, `express-session` (`httpOnly: true`), `passport`, `passport-local` y `connect-flash`.
+   - Al iniciar sesión en `POST /login`, Passport serializa el `id` del usuario en la sesión (`connect.sid`) y el servidor envía además la cookie `ultimoAcceso` (`httpOnly`) para mostrar la fecha y hora de ingreso en el encabezado del panel.
+   - Todas las rutas del panel (`/`, `/agregar-*`, `/eliminar-*`) están protegidas por el middleware `isAuthenticated`. Si no existe sesión activa, redirige automáticamente a `/login`.
+   - La ruta `GET /signout` invoca `req.logout()`, destruye la sesión con `req.session.destroy()`, limpia la cookie `ultimoAcceso` con `res.clearCookie()` y redirige a `/login`.
+
+2. **Autenticación basada en Token JWT (API REST):**
+   - `POST /api/usuarios`: Registra un nuevo usuario hasheando su contraseña con `bcrypt.hash(password, 10)`. El modelo oculta `passwordHash` en todas las respuestas JSON.
+   - `POST /api/login`: Verifica credenciales con `bcrypt.compare()` y firma un token con `jwt.sign({ username, id }, process.env.SECRET, { expiresIn: '1h' })`.
+   - `GET /api/perfil`: Ruta protegida por el middleware `verificarToken`, que extrae el encabezado `Authorization: Bearer <token>` y valida la firma con `jwt.verify()`.
+
+### Rutas de Autenticación
+
+| Método | Ruta | Tipo | Descripción |
+|---|---|---|---|
+| GET | `/login` | Web (Pug) | Formulario de inicio de sesión. |
+| POST | `/login` | Web (Passport) | Autentica con estrategia local, crea sesión y setea cookie `ultimoAcceso`. |
+| GET | `/signup` | Web (Pug) | Formulario de registro de nuevo operador. |
+| POST | `/signup` | Web (Passport) | Registra usuario con contraseña encriptada (`bcrypt`) e inicia sesión. |
+| GET | `/signout` | Web (Passport) | Cierra la sesión, elimina cookies y redirige a `/login`. |
+| POST | `/api/usuarios` | API REST | Crea un usuario con contraseña encriptada (`201 Created`). |
+| GET | `/api/usuarios` | API REST | Lista los usuarios registrados (sin exponer `passwordHash`). |
+| POST | `/api/login` | API REST | Autentica usuario y devuelve `{ token, username, name }` (`200 OK`). |
+| GET | `/api/perfil` | API REST | Devuelve los datos del usuario autenticado (requiere `Bearer <token>` o sesión). |
+
+---
+
+## 📡 Endpoints de la API REST de Negocio
 
 ### Clientes — `/api/clientes`
 
@@ -108,18 +164,6 @@ docs/             # Requerimientos, modelo de datos, plan de pruebas y evidencia
 | POST | `/api/clientes` | Crea un cliente. |
 | PUT | `/api/clientes/:id` | Actualiza los datos de un cliente. |
 | DELETE | `/api/clientes/:id` | Elimina un cliente. No está permitido si tiene pedidos activos. |
-
-**Body para crear o actualizar un cliente**
-
-Al crear un cliente, `nombre`, `telefono` y `direccion` son obligatorios.
-
-```json
-{
-  "nombre": "Juan Perez",
-  "telefono": "1122334455",
-  "direccion": "Calle Falsa 123"
-}
-```
 
 ### Productos — `/api/productos`
 
@@ -132,29 +176,6 @@ Al crear un cliente, `nombre`, `telefono` y `direccion` son obligatorios.
 | PUT/PATCH | `/api/productos/:id/stock` | Ajusta el stock según el valor de `cantidad`. |
 | DELETE | `/api/productos/:id` | Elimina un producto. No está permitido si tiene pedidos activos. |
 
-**Body para crear o actualizar un producto**
-
-Al crear un producto, `nombre`, `precio` y `stock` son obligatorios.
-
-```json
-{
-  "nombre": "Manzana",
-  "precio": 500,
-  "stock": 100,
-  "categoria": "Frutas"
-}
-```
-
-**Body para ajustar el stock**
-
-La propiedad `cantidad` puede ser negativa para descontar unidades.
-
-```json
-{
-  "cantidad": -20
-}
-```
-
 ### Repartidores — `/api/repartidores`
 
 | Método | Ruta | Descripción |
@@ -165,69 +186,28 @@ La propiedad `cantidad` puede ser negativa para descontar unidades.
 | PUT | `/api/repartidores/:id` | Actualiza un repartidor, incluida su disponibilidad. |
 | DELETE | `/api/repartidores/:id` | Elimina un repartidor. |
 
-**Body para crear un repartidor**
-
-Los campos `nombre`, `telefono` y `vehiculo` son obligatorios.
-
-```json
-{
-  "nombre": "Carlos",
-  "telefono": "1133445566",
-  "vehiculo": "Moto"
-}
-```
-
 ### Pedidos — `/api/pedidos`
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/pedidos` | Lista todos los pedidos con sus relaciones resueltas: cliente, productos y repartidor. Admite `?estado=` y `?idCliente=` para filtrar. |
+| GET | `/api/pedidos` | Lista todos los pedidos con sus relaciones resueltas (`populate`): cliente, productos y repartidor. Admite `?estado=` y `?idCliente=` para filtrar. |
 | GET | `/api/pedidos/:id` | Devuelve un pedido por ID. |
-| POST | `/api/pedidos` | Crea un pedido. El cliente y los productos deben existir; el repartidor debe existir si se indica. |
-| PUT/PATCH | `/api/pedidos/:id/estado` | Cambia el estado de un pedido. |
-
-**Body para crear un pedido**
-
-Los campos `idCliente` e `idProductos` son obligatorios. `idRepartidor` y `direccionEntrega` son opcionales.
-
-```json
-{
-  "idCliente": "64b7f0c2a1b2c3d4e5f60718",
-  "idProductos": [
-    "64b7f0c2a1b2c3d4e5f60719"
-  ],
-  "idRepartidor": null,
-  "direccionEntrega": "Av. Siempre Viva 742"
-}
-```
-
-El campo `montoTotal` se calcula sumando los precios de los productos incluidos en el pedido. Si no se indica `direccionEntrega`, se utiliza la dirección registrada del cliente.
-
-**Body para cambiar el estado de un pedido**
-
-```json
-{
-  "nuevoEstado": "Preparado"
-}
-```
-
-**Estados y reglas de negocio**
-
-Los estados contemplados son:
-
-`Pendiente` → `Preparado` → `En camino` → `Entregado`
-
-También se contempla el estado `Cancelado`.
-
-- Un pedido `Entregado` no puede volver a `Pendiente`.
-- Un pedido `Cancelado` no puede pasar a `En camino`.
-- Se consideran pedidos activos aquellos que están en `Pendiente`, `Preparado` o `En camino`.
+| POST | `/api/pedidos` | Crea un pedido calculando `montoTotal` automáticamente. |
+| PUT/PATCH | `/api/pedidos/:id/estado` | Cambia el estado de un pedido respetando las reglas de transición. |
 
 ---
 
 ## 🗃️ Esquemas de datos
 
 Todos los documentos tienen `_id` (ObjectId generado por MongoDB), `createdAt` y `updatedAt`.
+
+### Usuario
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `username` | string | Obligatorio, único y en minúsculas. |
+| `name` | string | Nombre visible del operador. |
+| `passwordHash` | string | Contraseña encriptada con `bcrypt` (oculta en `toJSON`). |
 
 ### Cliente
 
@@ -264,7 +244,7 @@ Todos los documentos tienen `_id` (ObjectId generado por MongoDB), `createdAt` y
 | `idRepartidor` | ObjectId (Repartidor) o `null` | Opcional; debe existir si se indica. |
 | `montoTotal` | number | Calculado al crear el pedido. |
 | `direccionEntrega` | string | Por defecto, utiliza la dirección del cliente. |
-| `estado` | string | `Pendiente` por defecto. |
+| `estado` | string | `Pendiente` por defecto (`Pendiente`, `Preparado`, `En camino`, `Entregado`, `Cancelado`). |
 
 ---
 
@@ -281,8 +261,9 @@ Las validaciones y reglas de negocio se gestionan mediante un middleware central
 | Código HTTP | Cuándo ocurre |
 |---|---|
 | `400 Bad Request` | Datos inválidos, errores de validación del schema o de tipos, ID con formato incorrecto, JSON malformado, transición de estado inválida o stock insuficiente. |
+| `401 Unauthorized` | Credenciales inválidas en `/api/login`, o token JWT faltante, inválido o expirado. |
 | `404 Not Found` | Recurso inexistente, cliente, producto o repartidor referenciado que no existe, o ruta no encontrada. |
-| `409 Conflict` | Valor duplicado, como teléfono de cliente o nombre de producto, o conflicto con una regla de negocio, como eliminar un cliente o producto con pedidos activos. |
+| `409 Conflict` | Valor duplicado (`username`, teléfono de cliente o nombre de producto) o conflicto con una regla de negocio (eliminar cliente o producto con pedidos activos). |
 | `500 Internal Server Error` | Error inesperado del servidor. |
 
 ---
@@ -316,8 +297,8 @@ Se realizaron pruebas mediante Thunder Client para verificar el funcionamiento d
 | # | Integrante | Rol | Responsabilidades |
 |---|---|---|---|
 | 1 | Valeria Fernandez | QA Tester & Documentación | Responsable del control de calidad, redacción del informe técnico final, seguimiento de entregables y verificación de requerimientos funcionales del caso FreshRoute. |
-| 2 | Micaela Gargiulo | Especialista en Vistas (Pug) | Desarrolladora del panel web de administración utilizando el motor de plantillas Pug. Diseño de maquetación, formularios interactivos y tablas dinámicas sincronizadas con el backend. |
-| 3 | Carlos Marcelo Hernandez | Desarrollador Backend & Git Manager | Configuración de la estructura MVC, lógica de controladores, flujo de enrutamiento y administración del repositorio colaborativo en GitHub mediante control de versiones y flujo de ramas. |
+| 2 | Micaela Gargiulo | Especialista en Vistas (Pug) | Desarrolladora del panel web de administración y vistas de autenticación utilizando el motor de plantillas Pug. Diseño de maquetación, formularios interactivos y tablas dinámicas sincronizadas con el backend. |
+| 3 | Carlos Marcelo Hernandez | Desarrollador Backend & Git Manager | Configuración de la estructura MVC, autenticación con Passport/JWT, migración a MongoDB Atlas, preparación para despliegue en Vercel y administración del repositorio en GitHub. |
 | 4 | Javier Lopez | Arquitecto de Software | Diseño de esquemas de datos en Mongoose, relaciones entre colecciones mediante `ObjectId`, reglas de negocio del dominio, middleware centralizado de manejo de errores y suite de pruebas automatizadas con Jest y Supertest. |
 | 5 | Dámaris Rodriguez | Persistencia, API REST & Testing | Implementación y auditoría de endpoints RESTful en Express, conexión con MongoDB mediante variables de entorno, pruebas de la API en Thunder Client y elaboración del plan de evidencia. |
 
@@ -325,9 +306,7 @@ Se realizaron pruebas mediante Thunder Client para verificar el funcionamiento d
 
 ### Documentación adicional
 
-- **Apuntes y material teórico de la cátedra:** Desarrollo de Sistemas Web (Backend) del IFTS N.º 29, con contenidos sobre Node.js, JavaScript, Express, motores de plantillas y bases de datos NoSQL con Mongoose.
-- **Documentación oficial de Node.js:** referencia sobre ejecución asíncrona mediante `async/await`, gestión de eventos y entorno de servidor.
-- **Documentación oficial de Express.js:** guías sobre enrutamiento modular mediante `express.Router`, middlewares y gestión de peticiones y respuestas HTTP.
-- **Documentación oficial de MongoDB y Mongoose:** referencia sobre modelado de esquemas, conexión asíncrona a la base de datos, referencias mediante `ObjectId` y resolución de relaciones con `populate`.
-- **Documentación oficial de Pug:** sintaxis del motor de plantillas para la renderización dinámica de vistas HTML desde el servidor.
-- **Documentación de Thunder Client:** guías para probar peticiones HTTP mediante los métodos GET, POST, PUT, PATCH y DELETE, y verificar códigos de estado como `200 OK`, `201 Created`, `400 Bad Request` y `404 Not Found`.
+- **Apuntes y material teórico de la cátedra:** Desarrollo de Sistemas Web (Backend) del IFTS N.º 29 (D8: Bases de datos en Express, D10: Autenticación, cookies y sesiones, D13: Despliegue de una aplicación con Node.js).
+- **Documentación oficial de Node.js y Express.js:** ejecución asíncrona mediante `async/await`, enrutamiento modular con `express.Router` y middlewares.
+- **Documentación oficial de MongoDB Atlas y Mongoose:** configuración de clúster en la nube, esquemas, referencias mediante `ObjectId` y resolución de relaciones con `populate`.
+- **Documentación de Passport.js y JSON Web Tokens (JWT):** estrategias de autenticación local con sesiones/cookies y tokens firmados.

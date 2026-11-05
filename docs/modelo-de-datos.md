@@ -1,6 +1,6 @@
 # Modelo de datos y flujo de estados
 
-## Colecciones de MongoDB
+## Colecciones de MongoDB Atlas
 
 ```mermaid
 erDiagram
@@ -8,6 +8,12 @@ erDiagram
     REPARTIDOR |o--o{ PEDIDO : entrega
     PEDIDO }o--|{ PRODUCTO : contiene
 
+    USUARIO {
+        ObjectId _id
+        string username "unico"
+        string name
+        string passwordHash "bcrypt hash"
+    }
     CLIENTE {
         ObjectId _id
         string nombre
@@ -39,7 +45,7 @@ erDiagram
     }
 ```
 
-Todas las colecciones incluyen `createdAt` y `updatedAt` (opción `timestamps` de Mongoose).
+Todas las colecciones incluyen `createdAt` y `updatedAt` (opción `timestamps` de Mongoose). En la colección `USUARIO`, la transformación `toJSON` oculta automáticamente el campo `passwordHash` para no exponerlo nunca en respuestas HTTP.
 
 ## Estados de un pedido
 

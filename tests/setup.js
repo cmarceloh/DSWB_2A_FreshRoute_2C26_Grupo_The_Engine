@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const { MongoMemoryServer } = require("mongodb-memory-server");
 
 // Se cargan los modelos para poder crear sus índices únicos antes de los tests
+require("../models/Usuario");
 require("../models/Cliente");
 require("../models/Producto");
 require("../models/Pedido");

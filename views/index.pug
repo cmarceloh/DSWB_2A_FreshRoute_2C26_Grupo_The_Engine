@@ -28,6 +28,11 @@ html(lang="es")
         padding: 28px max(24px, calc((100% - 1180px) / 2));
         color: #fff;
         background: #174c3b;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
       }
 
       header h1 {
@@ -38,6 +43,33 @@ html(lang="es")
       header p {
         margin: 0;
         color: #d4e6dd;
+      }
+
+      .user-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.92rem;
+        color: #d4e6dd;
+      }
+
+      .user-bar strong {
+        color: #fff;
+      }
+
+      .signout-link {
+        padding: 8px 13px;
+        border: 1px solid rgb(255 255 255 / 35%);
+        border-radius: 6px;
+        color: #fff;
+        background: rgb(255 255 255 / 10%);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .signout-link:hover {
+        background: rgb(255 255 255 / 20%);
       }
 
       main {
@@ -190,10 +222,19 @@ html(lang="es")
       }
 
   body
-    //- Encabezado que identifica el panel de gestión.
+    //- Encabezado que identifica el panel de gestión y la sesión activa.
     header
-      h1= titulo
-      p Panel de gestión de clientes, productos y pedidos
+      div
+        h1= titulo
+        p Panel de gestión de clientes, productos y pedidos
+      if user
+        .user-bar
+          span
+            | Operador: 
+            strong= `${user.name} (${user.username})`
+            if ultimoAcceso
+              |  · Último acceso: #{ultimoAcceso}
+          a.signout-link(href="/signout") Cerrar sesión
 
     //- Navegación interna para acceder rápidamente a cada sección.
     main

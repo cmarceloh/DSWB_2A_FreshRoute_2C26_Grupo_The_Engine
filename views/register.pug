@@ -1,0 +1,145 @@
+//- Vista de registro de nuevo usuario en FreshRoute (D10, pág. 63)
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title= titulo
+    style.
+      :root {
+        color-scheme: light;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        color: #1d2a25;
+        background: #f3f6f4;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        padding: 24px max(24px, calc((100% - 1180px) / 2));
+        color: #fff;
+        background: #174c3b;
+      }
+      header h1 {
+        margin: 0 0 4px;
+        font-size: 1.8rem;
+      }
+      header p {
+        margin: 0;
+        color: #d4e6dd;
+      }
+      main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .auth-card {
+        width: 100%;
+        max-width: 420px;
+        padding: 28px;
+        border: 1px solid #dce5df;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 4px 16px rgb(30 60 45 / 8%);
+      }
+      .auth-card h2 {
+        margin: 0 0 8px;
+        color: #174c3b;
+        font-size: 1.4rem;
+      }
+      .auth-card p.subtitle {
+        margin: 0 0 20px;
+        color: #52665c;
+        font-size: 0.92rem;
+      }
+      .alert {
+        margin-bottom: 16px;
+        padding: 11px 14px;
+        border: 1px solid #e7b3ad;
+        border-radius: 7px;
+        color: #7e261e;
+        background: #fff1ef;
+        font-size: 0.92rem;
+      }
+      form {
+        display: grid;
+        gap: 14px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        color: #384b42;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+      input {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 11px;
+        border: 1px solid #bdcbc2;
+        border-radius: 6px;
+        font: inherit;
+      }
+      input:focus {
+        border-color: #287457;
+        outline: 3px solid rgb(40 116 87 / 15%);
+      }
+      button {
+        min-height: 44px;
+        margin-top: 4px;
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 6px;
+        color: #fff;
+        background: #24704f;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #19583d;
+      }
+      .auth-footer {
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid #e5ebe7;
+        text-align: center;
+        font-size: 0.92rem;
+      }
+      .auth-footer a {
+        color: #174c3b;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .auth-footer a:hover {
+        text-decoration: underline;
+      }
+  body
+    header
+      h1 FreshRoute
+      p Sistema de distribución y gestión de pedidos
+    main
+      .auth-card
+        h2 Crear cuenta
+        p.subtitle Registrá un nuevo operador para gestionar FreshRoute
+        if message
+          p.alert(role="alert")= message
+        form(action="/signup" method="POST")
+          label(for="username") Nombre de usuario
+            input#username(type="text" name="username" placeholder="Mínimo 3 caracteres" required minlength="3" autofocus)
+          label(for="name") Nombre completo
+            input#name(type="text" name="name" placeholder="Ej: Valeria Fernandez" required)
+          label(for="password") Contraseña
+            input#password(type="password" name="password" placeholder="Mínimo 4 caracteres" required minlength="4")
+          button(type="submit") Registrarme
+        .auth-footer
+          | ¿Ya tenés cuenta? 
+          a(href="/login") Iniciar sesión
