@@ -1,7 +1,7 @@
 const request = require("supertest");
 const app = require("../app");
 
-describe("Autenticación, Cookies, Sesiones y JWT", () => {
+describe("Autenticación, Cookies, Sesiones, JWT y Chatbot (WebSockets)", () => {
   test("POST /api/usuarios crea un usuario con contraseña hasheada y oculta passwordHash", async () => {
     const res = await request(app).post("/api/usuarios").send({
       username: "admin",
@@ -115,5 +115,28 @@ describe("Autenticación, Cookies, Sesiones y JWT", () => {
     const bloqueado = await agent.get("/");
     expect(bloqueado.status).toBe(302);
     expect(bloqueado.headers.location).toBe("/login");
+  });
+
+  test("Chatbot FreshBot (GET y POST /api/chat) responde consultas de stock y reglas en tiempo real", async () => {
+    await request(app).post("/api/productos").send({
+      nombre: "Manzana Roja",
+      precio: 600,
+      stock: 15,
+      categoria: "Frutas",
+    });
+
+    const consultaStock = await request(app).post("/api/chat").send({
+      author: "admin",
+      text: "stock",
+    });
+
+    expect(consultaStock.status).toBe(201);
+    expect(consultaStock.body.respuestaBot).toBeDefined();
+    expect(consultaStock.body.respuestaBot.text).toContain("Manzana Roja");
+
+    const historial = await request(app).get("/api/chat");
+    expect(historial.status).toBe(200);
+    expect(Array.isArray(historial.body)).toBe(true);
+    expect(historial.body.length).toBeGreaterThanOrEqual(2);
   });
 });

@@ -21,8 +21,10 @@ API REST y panel web para la gestión de pedidos de FreshRoute, un sistema de di
   - `cookie-parser` y `express-session` para administración de cookies (`httpOnly`) y sesiones de usuario
   - `passport`, `passport-local` y `connect-flash` para estrategias de inicio de sesión (`login`), registro (`signup`) y protección de rutas del panel web
   - `jsonwebtoken` (JWT) para autenticación stateless mediante token `Bearer` en la API REST
+- **Tiempo Real y Chatbot Asistente:**
+  - `socket.io` (WebSockets) para sala de chat operativo bidireccional en tiempo real y el asistente automático **FreshBot** (consulta en vivo pedidos, stock, repartidores y clientes en MongoDB Atlas)
 - **Pug** (motor de plantillas para las vistas `/login`, `/signup` y el panel de gestión `/`)
-- **Jest + Supertest + mongodb-memory-server** (suite de 51 pruebas automatizadas de integración)
+- **Jest + Supertest + mongodb-memory-server** (suite de 52 pruebas automatizadas de integración)
 - **Vercel** (`vercel.json` configurado con `@vercel/node` para despliegue en producción)
 
 ## 📦 Instalación y configuración

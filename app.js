@@ -46,7 +46,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 initPassport(passport);
 
-// 3. Archivos estáticos (CSS, imágenes)
+// 3. Archivos estáticos (CSS, cliente WebSockets public/main.js)
 app.use(express.static(path.join(__dirname, "public")));
 
 // 4. Configuración del Motor de Plantillas (Pug)
@@ -59,11 +59,12 @@ app.use("/", require("./routes/auth")(passport));
 // 6. Rutas del panel web (vistas Pug y formularios protegidos con sesión)
 app.use("/", require("./routes/vistas"));
 
-// 7. Rutas de la API REST
+// 7. Rutas de la API REST y Chatbot
 app.use("/api/pedidos", require("./routes/pedidos"));
 app.use("/api/clientes", require("./routes/clientes"));
 app.use("/api/productos", require("./routes/productos"));
 app.use("/api/repartidores", require("./routes/repartidores"));
+app.use("/api/chat", require("./routes/chat"));
 
 // 8. Rutas inexistentes y manejo de errores (siempre al final)
 app.use(notFound);

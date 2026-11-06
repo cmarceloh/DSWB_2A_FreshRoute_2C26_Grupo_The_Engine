@@ -215,9 +215,95 @@ html(lang="es")
         color: #65756c;
       }
 
+      /* Estilos de la sala de Chat y Chatbot FreshBot con WebSockets (D12) */
+      .chat-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .ws-badge {
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #e8f4ee;
+        color: #174c3b;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
+      .chat-quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .chip-btn {
+        min-height: 32px;
+        padding: 6px 12px;
+        border: 1px solid #b8d1c4;
+        border-radius: 999px;
+        background: #f4f9f6;
+        color: #174c3b;
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+
+      .chip-btn:hover {
+        background: #dff0e6;
+      }
+
+      #messages {
+        max-height: 240px;
+        overflow-y: auto;
+        padding: 14px;
+        border: 1px solid #d5e2db;
+        border-radius: 8px;
+        background: #f9fbfa;
+        margin-bottom: 14px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .chat-msg {
+        padding: 9px 12px;
+        border-radius: 7px;
+        font-size: 0.93rem;
+        line-height: 1.4;
+      }
+
+      .chat-msg-user {
+        background: #fff;
+        border: 1px solid #dce5df;
+      }
+
+      .chat-msg-bot {
+        background: #e7f4ed;
+        border-left: 4px solid #24704f;
+        color: #133b2d;
+      }
+
+      .chat-time {
+        color: #65756c;
+        font-size: 0.8rem;
+        font-weight: normal;
+      }
+
+      .chat-form {
+        display: grid;
+        grid-template-columns: 180px 1fr auto;
+        gap: 10px;
+      }
+
       @media (max-width: 600px) {
         .panel {
           padding: 17px;
+        }
+        .chat-form {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -240,6 +326,7 @@ html(lang="es")
     main
       nav.section-nav(aria-label="Secciones del panel")
         a(href="#formularios") Carga de datos
+        a(href="#chatbot") 🤖 Chat & FreshBot
         a(href="#repartidores") Repartidores
         a(href="#clientes") Clientes
         a(href="#productos") Productos
@@ -307,6 +394,23 @@ html(lang="es")
             label(for="pedido-direccion") Dirección de entrega (opcional, por defecto la del cliente)
             input#pedido-direccion(type="text" name="direccionEntrega" maxlength="200")
             button(type="submit") Guardar pedido
+
+      //- Sala de Chat Operativo en Tiempo Real y Chatbot FreshBot con WebSockets (D12. Websockets, págs. 18-21)
+      section#chatbot.panel
+        .chat-header
+          h2(style="margin:0") 💬 Chat Operativo en Tiempo Real & Asistente FreshBot (Socket.io)
+          span#ws-status.ws-badge 🟢 WebSockets (Socket.io)
+        .chat-quick-actions
+          button.chip-btn(type="button" onclick="enviarConsultaRapida('pedidos')") 📦 Estado de pedidos
+          button.chip-btn(type="button" onclick="enviarConsultaRapida('stock')") 🍎 Consultar stock
+          button.chip-btn(type="button" onclick="enviarConsultaRapida('repartidores')") 🛵 Repartidores disponibles
+          button.chip-btn(type="button" onclick="enviarConsultaRapida('clientes')") 👥 Resumen clientes
+          button.chip-btn(type="button" onclick="enviarConsultaRapida('reglas')") 📋 Reglas de negocio
+        #messages
+        form.chat-form(onsubmit="return addMessage(this)")
+          input#username(type="text" placeholder="Nombre" value=(user ? user.username : "Operador") required)
+          input#texto(type="text" placeholder="Escribí un mensaje o consultá a FreshBot ('pedidos', 'stock', 'repartidores')..." required)
+          button(type="submit") Enviar!
 
       //- Tabla de repartidores consultados desde MongoDB.
       section#repartidores.panel
@@ -426,3 +530,6 @@ html(lang="es")
               else
                 tr
                   td.empty-state(colspan="8") Todavía no hay pedidos registrados.
+
+    script(src="/socket.io/socket.io.js")
+    script(src="/main.js")
